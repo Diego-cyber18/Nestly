@@ -130,6 +130,8 @@
 
 
 
+
+
 function useIsMobile() {
     const [m, setM] = (0, React.useState)(typeof window !== 'undefined' ? window.innerWidth < 768 : true);
     (0, React.useEffect)(() => {
@@ -634,6 +636,7 @@ function App() {
     const [pelletLog, setPelletLog] = (0, React.useState)([]);
     const [pelletForm, setPelletForm] = (0, React.useState)({ date: today(), comprati: "", consumati: "" });
     const [editingPellet, setEditingPellet] = (0, React.useState)(null);
+    const [showPelletForm, setShowPelletForm] = (0, React.useState)(false);
     const [editingItem, setEditingItem] = (0, React.useState)(null); // id of item being edited (day/desc)
     const [editItemDraft, setEditItemDraft] = (0, React.useState)({ day: "", desc: "" });
     const [dragItem, setDragItem] = (0, React.useState)(null); // { groupId, itemId, index }
@@ -1935,6 +1938,7 @@ function App() {
                 };
                 const startEditPellet = (entry) => {
                     setEditingPellet(entry.id);
+                    setShowPelletForm(true);
                     setPelletForm({ date: entry.date, comprati: String(entry.comprati), consumati: String(entry.consumati) });
                 };
                 const deletePellet = (id) => savePelletLog(pelletLog.filter(e => e.id !== id));
@@ -1967,8 +1971,14 @@ function App() {
                             React.createElement("div", { style: { fontSize: 10, color: "#555", textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 } }, t("totalBought")),
                             React.createElement("div", { style: { fontFamily: "'DM Serif Display',serif", fontSize: 22, color: "#a0d4ff" } }, sorted.reduce((a, e) => a + (parseInt(e.comprati) || 0), 0)),
                             React.createElement("div", { style: { fontSize: 11, color: "#555" } }, t("bags"))))),
-                    React.createElement("div", { style: { background: "#141418", border: "1px solid #252530", borderRadius: 14, padding: 16, marginBottom: 16 } },
-                        React.createElement("div", { style: { fontSize: 11, color: "#555", letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 } }, editingPellet ? t("editRow") : t("addRow")),
+                    !editingPellet && !showPelletForm ? (React.createElement("button", { onClick: () => setShowPelletForm(true), style: {
+                            width: "100%", background: "#e8c547", color: "#0d0d0f", borderRadius: 12,
+                            padding: "13px", fontSize: 14, fontWeight: 700, marginBottom: 16, cursor: "pointer",
+                            display: "flex", alignItems: "center", justifyContent: "center", gap: 8
+                        } }, "\u2795 Nuova riga")) : (React.createElement("div", { style: { background: "#141418", border: "1px solid #252530", borderRadius: 14, padding: 16, marginBottom: 16 } },
+                        React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 } },
+                            React.createElement("div", { style: { fontSize: 11, color: "#555", letterSpacing: 1, textTransform: "uppercase" } }, editingPellet ? t("editRow") : t("addRow")),
+                            !editingPellet && (React.createElement("button", { onClick: () => { setShowPelletForm(false); setPelletForm({ date: today(), comprati: "", consumati: "" }); }, style: { color: "#444", fontSize: 20, lineHeight: 1 } }, "\u00D7"))),
                         React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8, marginBottom: 10 } },
                             React.createElement("div", null,
                                 React.createElement("div", { style: { fontSize: 10, color: "#666", marginBottom: 4 } }, t("date")),
@@ -1981,8 +1991,8 @@ function App() {
                                     React.createElement("div", { style: { fontSize: 10, color: "#a04000", marginBottom: 4 } }, t("consumed")),
                                     React.createElement("input", { type: "number", placeholder: "0", value: pelletForm.consumati, onChange: e => setPelletForm(f => (Object.assign(Object.assign({}, f), { consumati: e.target.value }))) })))),
                         React.createElement("div", { style: { display: "flex", gap: 8 } },
-                            React.createElement("button", { onClick: addOrUpdatePellet, style: { flex: 1, background: "#e8c547", color: "#0d0d0f", borderRadius: 10, padding: "11px", fontSize: 13, fontWeight: 700 } }, editingPellet ? t("saveChanges") : t("add")),
-                            editingPellet && (React.createElement("button", { onClick: () => { setEditingPellet(null); setPelletForm({ date: today(), comprati: "", consumati: "" }); }, style: { background: "#1f1f28", color: "#888", borderRadius: 10, padding: "11px 16px", fontSize: 13 } }, "Annulla")))),
+                            React.createElement("button", { onClick: () => { addOrUpdatePellet(); setShowPelletForm(false); }, style: { flex: 1, background: "#e8c547", color: "#0d0d0f", borderRadius: 10, padding: "11px", fontSize: 13, fontWeight: 700 } }, editingPellet ? t("saveChanges") : t("add")),
+                            editingPellet && (React.createElement("button", { onClick: () => { setEditingPellet(null); setPelletForm({ date: today(), comprati: "", consumati: "" }); }, style: { background: "#1f1f28", color: "#888", borderRadius: 10, padding: "11px 16px", fontSize: 13 } }, "Annulla"))))),
                     rows.length > 0 && (React.createElement("div", { style: { overflowX: "auto", WebkitOverflowScrolling: "touch" } },
                         React.createElement("div", { style: { minWidth: 340 } },
                             React.createElement("div", { style: { display: "grid", gridTemplateColumns: "72px 42px 42px 52px 52px 52px 36px", gap: 3, padding: "6px 8px", marginBottom: 4 } }, [t("date"), "🛒", "🔥", "Rim.", "Med/g", "Gg", ""].map((h, i) => (React.createElement("div", { key: i, style: { fontSize: 9, color: "#555", fontWeight: 700, letterSpacing: 0.6, textTransform: "uppercase", textAlign: i > 2 ? "right" : "left" } }, h)))),
