@@ -35,13 +35,9 @@
   window.addEventListener('load', function() {
     try {
       if (!window.React || !window.ReactDOM) throw new Error('React non caricato');
-
       const { useState, useEffect } = React;
-
-      // Recharts bridge
       const { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, Cell } = window.Recharts || {};
 
-      // ── FIREBASE SYNC ──
       firebase.initializeApp({
         apiKey: "AIzaSyBDTMPfdMxsvstKYpvQh_95URYfN5JdzEE",
         authDomain: "moneypal-89fcf.firebaseapp.com",
@@ -56,7 +52,6 @@
       const _ref = _db.ref('budget/family');
       const _cache = {};
 
-      // Override localStorage → Firebase (stesso approccio del vecchio file)
       try {
         Object.defineProperty(window, 'localStorage', {
           value: {
@@ -69,14 +64,13 @@
           },
           writable: false, configurable: true
         });
-      } catch(lsErr) {
+      } catch(e) {
         const orig = window.localStorage;
         orig.getItem = (k) => k in _cache ? _cache[k] : null;
         orig.setItem = (k, v) => { _cache[k] = v; _ref.update({[k]: v}).catch(console.error); };
         orig.removeItem = (k) => { delete _cache[k]; _ref.child(k).remove().catch(()=>{}); };
       }
 
-      // Sync banner quando l'altro utente salva
       let _firstLoad = true;
       _ref.on('value', snap => {
         const remote = snap.val() || {};
@@ -96,14 +90,9 @@
         }
       });
 
-      // Carica dati da Firebase, poi avvia app
       document.getElementById('loading-msg').textContent = 'Connessione...';
       _ref.once('value')
-        .then(snap => {
-          const d = snap.val();
-          if (d) Object.assign(_cache, d);
-          document.getElementById('loading-msg').textContent = 'Avvio...';
-        })
+        .then(snap => { const d = snap.val(); if (d) Object.assign(_cache, d); })
         .catch(e => console.warn('Firebase error:', e))
         .finally(() => {
           _firstLoad = false;
@@ -971,7 +960,7 @@ function App() {
         .tag { display:inline-flex; align-items:center; font-size:10px; font-weight:700; padding:2px 9px; border-radius:20px; letter-spacing:0.8px; text-transform:uppercase; color:#fff; white-space:nowrap; }
       `),
         React.createElement("div", { style: { className: "mp-header", padding: isMobile ? "16px 16px 0" : "16px 32px 0", borderBottom: "1px solid #1a1a22", position: "sticky", top: 0, background: "#0d0d0f", zIndex: 20, paddingTop: "env(safe-area-inset-top, 16px)" } },
-            React.createElement("div", { style: { maxWidth: 680, margin: "0 auto" } },
+            React.createElement("div", { style: { maxWidth: isMobile ? 680 : "none", margin: "0 auto" } },
                 React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 } },
                     React.createElement("div", null, isMobile && React.createElement("div", { style: { fontFamily: "'DM Serif Display',serif", fontSize: 24, color: "#e8c547" } }, "MoneyPal")),
                     React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8 } },
@@ -986,7 +975,7 @@ function App() {
                 tab === "budget" && (React.createElement("div", { style: { display: "flex", gap: 6, padding: "10px 0 12px" } }, [["plan", "subPlan"], ["daily", "subDaily"], ["overview", "subOverview"]].map(([s, k]) => (React.createElement("button", { key: s, onClick: () => setSubTab(s), style: { flex: 1, padding: "9px 0", borderRadius: 12, border: "none", fontFamily: "inherit", fontSize: 13, fontWeight: 600, cursor: "pointer", background: subTab === s ? "#e8c547" : "#1a1a22", color: subTab === s ? "#0d0d0f" : "#555", transition: "all 0.15s" } }, t(k)))))),
                 tab === "spese" && (React.createElement("div", { style: { display: "flex", gap: 6, padding: "10px 0 12px" } }, [["uscite", "subUscite"]].map(([s, k]) => (React.createElement("button", { key: s, onClick: () => setSubTab(s), style: { flex: 1, padding: "9px 0", borderRadius: 12, border: "none", fontFamily: "inherit", fontSize: 13, fontWeight: 600, cursor: "pointer", background: subTab === s ? "#e8c547" : "#1a1a22", color: subTab === s ? "#0d0d0f" : "#555", transition: "all 0.15s" } }, t(k)))))),
                 tab === "casa" && (React.createElement("div", { style: { display: "flex", gap: 6, padding: "10px 0 12px" } }, [["bollette", "subBollette"], ["pellet", "subPellet"], ["grafici", "subGrafici"]].map(([s, k]) => (React.createElement("button", { key: s, onClick: () => setSubTab(s), style: { flex: 1, padding: "9px 0", borderRadius: 12, border: "none", fontFamily: "inherit", fontSize: 13, fontWeight: 600, cursor: "pointer", background: subTab === s ? "#e8c547" : "#1a1a22", color: subTab === s ? "#0d0d0f" : "#555", transition: "all 0.15s" } }, t(k)))))))),
-        React.createElement("div", { style: { maxWidth: 680, margin: "0 auto", padding: "20px 16px 70px" } },
+        React.createElement("div", { style: { maxWidth: isMobile ? 680 : "none", margin: "0 auto", padding: isMobile ? "20px 16px 90px" : "24px 0 40px" } },
             (tab === "entrate" && subTab !== "storico") && (React.createElement("div", null,
                 React.createElement("div", { style: { fontSize: 10, color: "#555", letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 16 } },
                     MONTHS[month],
@@ -1844,14 +1833,11 @@ function App() {
 
 
           try {
-            const domRoot = ReactDOM.createRoot(document.getElementById('root'));
-            domRoot.render(React.createElement(App));
-          } catch(renderErr) {
-            document.getElementById('root').innerHTML = '<div style="color:#e74c3c;padding:40px;text-align:center;font-family:sans-serif">Errore: ' + renderErr.message + '</div>';
-            document.getElementById('loading-screen').style.display = 'none';
+            ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
+          } catch(e) {
+            document.getElementById('root').innerHTML = '<div style="color:#e74c3c;padding:40px;font-family:sans-serif">Errore: ' + e.message + '</div>';
           }
         });
-
     } catch(err) {
       document.getElementById('loading-screen').innerHTML = '<div style="color:#e74c3c;padding:40px;text-align:center;font-family:sans-serif">Errore: ' + err.message + '<br><br><button onclick="location.reload()" style="background:#e8c547;color:#000;border:none;padding:10px 20px;border-radius:8px;cursor:pointer">Ricarica</button></div>';
     }
