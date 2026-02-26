@@ -116,6 +116,10 @@
 
 
 
+
+
+
+
 function useIsMobile() {
     const [m, setM] = (0, React.useState)(typeof window !== 'undefined' ? window.innerWidth < 768 : true);
     (0, React.useEffect)(() => {
@@ -636,9 +640,16 @@ function App() {
                         const defaultGroup = PLAN_STRUCTURE.find(g => g.id === group.id);
                         if (!defaultGroup)
                             return group;
-                        return Object.assign(Object.assign({}, group), { items: group.items.map(item => {
+                        // Migrate: rename "Risparmi Diego"/"Risparmi Carmen" → "Risparmi"
+                        let items = group.items.map(i => {
+                            if (i.name === "Risparmi Diego" || i.name === "Risparmi Carmen")
+                                return Object.assign(Object.assign({}, i), { name: "Risparmi" });
+                            return i;
+                        });
+                        return Object.assign(Object.assign({}, group), { items: items.map(item => {
+                                var _a;
                                 const defaultItem = defaultGroup.items.find(i => i.id === item.id);
-                                return defaultItem ? Object.assign(Object.assign({}, item), { day: defaultItem.day, cat: item.cat || defaultItem.cat }) : item;
+                                return defaultItem ? Object.assign(Object.assign({}, item), { day: (_a = item.day) !== null && _a !== void 0 ? _a : defaultItem.day, cat: item.cat || defaultItem.cat }) : item;
                             }) });
                     });
                     setStructure(merged);
