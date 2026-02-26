@@ -122,6 +122,10 @@
 
 
 
+
+
+
+
 function useIsMobile() {
     const [m, setM] = (0, React.useState)(typeof window !== 'undefined' ? window.innerWidth < 768 : true);
     (0, React.useEffect)(() => {
@@ -758,8 +762,13 @@ function App() {
     };
     const diegoEntries = normalizeEntries(current.diego);
     const carmenEntries = normalizeEntries(current.carmen);
-    const diegoVal = diegoEntries.reduce((a, e) => a + (parseFloat(e.amount) || 0), 0);
-    const carmenVal = carmenEntries.reduce((a, e) => a + (parseFloat(e.amount) || 0), 0);
+    const netAmount = (e) => {
+        const gross = parseFloat(e.amount) || 0;
+        const tax = parseFloat(e.tax) || 0;
+        return tax > 0 ? gross * (1 - tax / 100) : gross;
+    };
+    const diegoVal = diegoEntries.reduce((a, e) => a + netAmount(e), 0);
+    const carmenVal = carmenEntries.reduce((a, e) => a + netAmount(e), 0);
     const total = diegoVal + carmenVal;
     const diegoPct = total > 0 ? (diegoVal / total) * 100 : 50;
     const carmenPct = total > 0 ? (carmenVal / total) * 100 : 50;
@@ -1095,12 +1104,33 @@ function App() {
                             React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 } },
                                 React.createElement("div", { style: { fontSize: 11, color, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase" } }, label),
                                 val > 0 && React.createElement("div", { style: { fontFamily: "'DM Serif Display',serif", fontSize: 20, color } }, fmt(val))),
-                            React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } }, (entries.length === 0 ? [{ id: "new_default", label: "", amount: "" }] : entries).map((entry, ei) => (React.createElement("div", { key: entry.id, style: { display: "flex", gap: 6, alignItems: "center" } },
-                                React.createElement("input", { type: "text", placeholder: "es. Stipendio", value: entry.label, onChange: e => updateIncomeEntry(k, entry.id, "label", e.target.value), style: { flex: 1, padding: "8px 10px", fontSize: 12, background: "rgba(0,0,0,0.25)", borderColor: `${color}33` } }),
-                                React.createElement("div", { style: { position: "relative", flex: "0 0 110px" } },
-                                    React.createElement("span", { style: { position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#555", fontSize: 13 } }, "\u20AC"),
-                                    React.createElement("input", { type: "number", placeholder: "0,00", value: entry.amount, onChange: e => updateIncomeEntry(k, entry.id, "amount", e.target.value), style: { paddingLeft: 24, padding: "8px 10px 8px 24px", fontSize: 13, background: "rgba(0,0,0,0.25)", borderColor: `${color}33` } })),
-                                entries.length > 1 && (React.createElement("button", { onClick: () => removeIncomeEntry(k, entry.id), style: { color: "#3a3a44", fontSize: 18, padding: "0 2px", flexShrink: 0 } }, "\u00D7")))))),
+                            React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } }, (entries.length === 0 ? [{ id: "new_default", label: "", amount: "" }] : entries).map((entry, ei) => {
+                                const gross = parseFloat(entry.amount) || 0;
+                                const tax = parseFloat(entry.tax) || 0;
+                                const net = tax > 0 ? gross * (1 - tax / 100) : 0;
+                                return (React.createElement("div", { key: entry.id },
+                                    React.createElement("div", { style: { display: "flex", gap: 6, alignItems: "center" } },
+                                        React.createElement("input", { type: "text", placeholder: "es. Stipendio", value: entry.label, onChange: e => updateIncomeEntry(k, entry.id, "label", e.target.value), style: { flex: 1, padding: "8px 10px", fontSize: 12, background: "rgba(0,0,0,0.25)", borderColor: `${color}33` } }),
+                                        React.createElement("div", { style: { position: "relative", flex: "0 0 105px" } },
+                                            React.createElement("span", { style: { position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#555", fontSize: 13 } }, "\u20AC"),
+                                            React.createElement("input", { type: "number", placeholder: "0,00", value: entry.amount, onChange: e => updateIncomeEntry(k, entry.id, "amount", e.target.value), style: { paddingLeft: 24, padding: "8px 10px 8px 24px", fontSize: 13, background: "rgba(0,0,0,0.25)", borderColor: `${color}33` } })),
+                                        React.createElement("div", { style: { position: "relative", flex: "0 0 70px" } },
+                                            React.createElement("input", { type: "number", placeholder: "0%", min: "0", max: "100", value: entry.tax || "", onChange: e => updateIncomeEntry(k, entry.id, "tax", e.target.value), style: { padding: "8px 20px 8px 8px", fontSize: 12, background: "rgba(0,0,0,0.25)", borderColor: tax > 0 ? "rgba(231,76,60,0.4)" : "#252530", textAlign: "right" } }),
+                                            React.createElement("span", { style: { position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", color: tax > 0 ? "#e74c3c" : "#444", fontSize: 11, pointerEvents: "none" } }, "%")),
+                                        entries.length > 1 && (React.createElement("button", { onClick: () => removeIncomeEntry(k, entry.id), style: { color: "#3a3a44", fontSize: 18, padding: "0 2px", flexShrink: 0 } }, "\u00D7"))),
+                                    tax > 0 && gross > 0 && (React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 4, marginBottom: 2, padding: "5px 10px", background: "rgba(231,76,60,0.06)", border: "1px solid rgba(231,76,60,0.15)", borderRadius: 7 } },
+                                        React.createElement("span", { style: { fontSize: 11, color: "#888" } },
+                                            "Lordo ",
+                                            fmt(gross),
+                                            " \u2212 ",
+                                            tax,
+                                            "% tasse (",
+                                            fmt(gross * tax / 100),
+                                            ")"),
+                                        React.createElement("span", { style: { fontSize: 13, fontWeight: 600, color } },
+                                            "Netto ",
+                                            fmt(net))))));
+                            })),
                             React.createElement("button", { onClick: () => addIncomeEntry(k), style: {
                                     width: "100%", marginTop: 10, padding: "7px", borderRadius: 8,
                                     border: `1px dashed ${color}33`, color: `${color}99`, fontSize: 12,
