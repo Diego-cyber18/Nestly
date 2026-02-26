@@ -106,6 +106,8 @@
 
 
 
+
+
 function useIsMobile() {
     const [m, setM] = (0, React.useState)(typeof window !== 'undefined' ? window.innerWidth < 768 : true);
     (0, React.useEffect)(() => {
@@ -1681,23 +1683,51 @@ function App() {
                     return (React.createElement("div", { style: { textAlign: "center", color: "#333", fontSize: 13, padding: "40px 0" } }, "Inserisci dati nelle Bollette per vedere i grafici"));
                 const chartStyle = { background: "#141418", border: "1px solid #1f1f28", borderRadius: 14, padding: "14px 8px 8px", marginBottom: 14 };
                 const titleStyle = { fontSize: 11, fontWeight: 700, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 12, paddingLeft: 8 };
+                const chartH = isMobile ? 180 : 240;
                 return (React.createElement("div", null,
                     React.createElement("div", { style: { fontSize: 10, color: "#555", letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 16 } }, t("graficiTitle")),
                     React.createElement("div", { style: { fontSize: 11, color: "#e8c547", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12, textAlign: "center", padding: "8px", background: "rgba(232,197,71,0.07)", borderRadius: 8 } }, t("monthlyTrend")),
-                    React.createElement("div", { style: chartStyle },
-                        React.createElement("div", { style: Object.assign(Object.assign({}, titleStyle), { color: "#f1c40f" }) }, `⚡ ${t("luceNetta")}`),
-                        React.createElement(SimpleBarChart, { data: monthlyData, height: 180, bars: [{ dataKey: "luce", name: "Luce netta", fill: "#f1c40f" }] })),
-                    React.createElement("div", { style: chartStyle },
-                        React.createElement("div", { style: Object.assign(Object.assign({}, titleStyle), { color: "#e67e22" }) }, `🔥 ${t("gasePellet")}`),
-                        React.createElement(SimpleBarChart, { data: monthlyData, height: 180, bars: [{ dataKey: "gas", name: "Gas", fill: "#e67e22" }, { dataKey: "pellet", name: "Pellet", fill: "#a04000" }] })),
-                    React.createElement("div", { style: chartStyle },
-                        React.createElement("div", { style: Object.assign(Object.assign({}, titleStyle), { color: "#3498db" }) }, "\uD83D\uDCA7 Acqua"),
-                        React.createElement(SimpleBarChart, { data: monthlyData, height: 180, bars: [{ dataKey: "acqua", name: "Acqua", fill: "#3498db" }] })),
+                    isMobile ? (React.createElement(React.Fragment, null,
+                        React.createElement("div", { style: chartStyle },
+                            React.createElement("div", { style: Object.assign(Object.assign({}, titleStyle), { color: "#f1c40f" }) }, `⚡ ${t("luceNetta")}`),
+                            React.createElement(SimpleBarChart, { data: monthlyData, height: 180, bars: [{ dataKey: "luce", name: "Luce netta", fill: "#f1c40f" }] })),
+                        React.createElement("div", { style: chartStyle },
+                            React.createElement("div", { style: Object.assign(Object.assign({}, titleStyle), { color: "#e67e22" }) }, `🔥 ${t("gasePellet")}`),
+                            React.createElement(SimpleBarChart, { data: monthlyData, height: 180, bars: [{ dataKey: "gas", name: "Gas", fill: "#e67e22" }, { dataKey: "pellet", name: "Pellet", fill: "#a04000" }] })),
+                        React.createElement("div", { style: chartStyle },
+                            React.createElement("div", { style: Object.assign(Object.assign({}, titleStyle), { color: "#3498db" }) }, "\uD83D\uDCA7 Acqua"),
+                            React.createElement(SimpleBarChart, { data: monthlyData, height: 180, bars: [{ dataKey: "acqua", name: "Acqua", fill: "#3498db" }] })))) : (React.createElement(React.Fragment, null,
+                        React.createElement("div", { style: chartStyle },
+                            React.createElement("div", { style: Object.assign(Object.assign({}, titleStyle), { color: "#f1c40f" }) }, `⚡ ${t("luceNetta")}`),
+                            React.createElement(SimpleBarChart, { data: monthlyData, height: chartH, bars: [{ dataKey: "luce", name: "Luce netta", fill: "#f1c40f" }] })),
+                        React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 14 } },
+                            React.createElement("div", { style: { background: "#141418", border: "1px solid #1f1f28", borderRadius: 14, padding: "14px 8px 8px" } },
+                                React.createElement("div", { style: Object.assign(Object.assign({}, titleStyle), { color: "#e67e22" }) }, `🔥 ${t("gasePellet")}`),
+                                React.createElement(SimpleBarChart, { data: monthlyData, height: chartH, bars: [{ dataKey: "gas", name: "Gas", fill: "#e67e22" }, { dataKey: "pellet", name: "Pellet", fill: "#a04000" }] })),
+                            React.createElement("div", { style: { background: "#141418", border: "1px solid #1f1f28", borderRadius: 14, padding: "14px 8px 8px" } },
+                                React.createElement("div", { style: Object.assign(Object.assign({}, titleStyle), { color: "#3498db" }) }, "\uD83D\uDCA7 Acqua"),
+                                React.createElement(SimpleBarChart, { data: monthlyData, height: chartH, bars: [{ dataKey: "acqua", name: "Acqua", fill: "#3498db" }] }))))),
                     yearlyData.length > 0 && (React.createElement(React.Fragment, null,
                         React.createElement("div", { style: { fontSize: 11, color: "#e8c547", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12, textAlign: "center", padding: "8px", background: "rgba(232,197,71,0.07)", borderRadius: 8 } }, t("yearlyTotals")),
-                        React.createElement("div", { style: chartStyle }),
-                        React.createElement("div", { style: chartStyle }),
-                        React.createElement("div", { style: chartStyle })))));
+                        isMobile ? (React.createElement(React.Fragment, null,
+                            React.createElement("div", { style: chartStyle },
+                                React.createElement("div", { style: Object.assign(Object.assign({}, titleStyle), { color: "#f1c40f" }) }, `⚡ ${t("luceAnno")}`),
+                                React.createElement(SimpleBarChart, { data: yearlyData, height: 180, bars: [{ dataKey: "luceNetta", name: "Luce netta", fill: "#f1c40f" }] })),
+                            React.createElement("div", { style: chartStyle },
+                                React.createElement("div", { style: Object.assign(Object.assign({}, titleStyle), { color: "#e67e22" }) }, `🔥 ${t("gasePelletAnno")}`),
+                                React.createElement(SimpleBarChart, { data: yearlyData, height: 180, bars: [{ dataKey: "gas", name: "Gas", fill: "#e67e22" }, { dataKey: "pellet", name: "Pellet", fill: "#a04000" }] })),
+                            React.createElement("div", { style: chartStyle },
+                                React.createElement("div", { style: Object.assign(Object.assign({}, titleStyle), { color: "#3498db" }) }, `💧 ${t("acquaAnno")}`),
+                                React.createElement(SimpleBarChart, { data: yearlyData, height: 180, bars: [{ dataKey: "acqua", name: "Acqua", fill: "#3498db" }] })))) : (React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14 } },
+                            React.createElement("div", { style: { background: "#141418", border: "1px solid #1f1f28", borderRadius: 14, padding: "14px 8px 8px" } },
+                                React.createElement("div", { style: Object.assign(Object.assign({}, titleStyle), { color: "#f1c40f" }) }, `⚡ ${t("luceAnno")}`),
+                                React.createElement(SimpleBarChart, { data: yearlyData, height: 220, bars: [{ dataKey: "luceNetta", name: "Luce netta", fill: "#f1c40f" }] })),
+                            React.createElement("div", { style: { background: "#141418", border: "1px solid #1f1f28", borderRadius: 14, padding: "14px 8px 8px" } },
+                                React.createElement("div", { style: Object.assign(Object.assign({}, titleStyle), { color: "#e67e22" }) }, `🔥 ${t("gasePelletAnno")}`),
+                                React.createElement(SimpleBarChart, { data: yearlyData, height: 220, bars: [{ dataKey: "gas", name: "Gas", fill: "#e67e22" }, { dataKey: "pellet", name: "Pellet", fill: "#a04000" }] })),
+                            React.createElement("div", { style: { background: "#141418", border: "1px solid #1f1f28", borderRadius: 14, padding: "14px 8px 8px" } },
+                                React.createElement("div", { style: Object.assign(Object.assign({}, titleStyle), { color: "#3498db" }) }, `💧 ${t("acquaAnno")}`),
+                                React.createElement(SimpleBarChart, { data: yearlyData, height: 220, bars: [{ dataKey: "acqua", name: "Acqua", fill: "#3498db" }] }))))))));
             })(),
             (tab === "casa" && subTab === "pellet") && (() => {
                 var _a;
