@@ -304,6 +304,8 @@
 
 
 
+
+
 function useIsMobile() {
     const [m, setM] = (0, React.useState)(typeof window !== 'undefined' ? window.innerWidth < 768 : true);
     (0, React.useEffect)(() => {
@@ -773,6 +775,26 @@ const today = () => {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 };
+function FamilyCodeWidget() {
+    const [meta, setMeta] = React.useState(null);
+    React.useEffect(() => {
+        if (window._getFamilyMeta)
+            window._getFamilyMeta().then(setMeta).catch(() => { });
+    }, []);
+    if (!meta || !meta.code)
+        return null;
+    return (React.createElement("div", { style: { margin: "8px 20px 0", background: "rgba(232,197,71,0.07)", border: "1px solid rgba(232,197,71,0.2)", borderRadius: 10, padding: "10px 14px" } }, React.createElement("div", { style: { fontSize: 9, color: "#666", fontWeight: 700, letterSpacing: 1, marginBottom: 4 } }, "CODICE FAMIGLIA"), React.createElement("div", { style: { fontSize: 20, fontWeight: 700, color: "#e8c547", letterSpacing: 4, marginBottom: 2 } }, meta.code), React.createElement("div", { style: { fontSize: 10, color: "#555" } }, "Condividilo col tuo partner")));
+}
+function FamilyCodeModal() {
+    const [meta, setMeta] = React.useState(null);
+    React.useEffect(() => {
+        if (window._getFamilyMeta)
+            window._getFamilyMeta().then(setMeta).catch(() => { });
+    }, []);
+    if (!meta || !meta.code)
+        return null;
+    return (React.createElement("div", { style: { background: "rgba(232,197,71,0.07)", border: "1px solid rgba(232,197,71,0.2)", borderRadius: 12, padding: "14px 16px", marginTop: 4 } }, React.createElement("div", { style: { fontSize: 9, color: "#666", fontWeight: 700, letterSpacing: 1, marginBottom: 6 } }, "CODICE FAMIGLIA"), React.createElement("div", { style: { fontSize: 26, fontWeight: 700, color: "#e8c547", letterSpacing: 6, textAlign: "center", marginBottom: 6 } }, meta.code), React.createElement("div", { style: { fontSize: 11, color: "#555", textAlign: "center" } }, "Condividi con il tuo partner per accedere agli stessi dati")));
+}
 function App() {
     const isMobile = useIsMobile();
     const [tab, setTab] = (0, React.useState)("entrate");
@@ -1159,16 +1181,8 @@ function App() {
                         setShowSetup(false);
                     }, style: { background: "#e8c547", color: "#0d0d0f", borderRadius: 12, padding: "14px", fontSize: 15, fontWeight: 700, marginTop: 8 } }, showSetup ? t("settingsSave") : t("settingsStart")),
                 showSetup && (React.createElement("button", { onClick: () => { setShowSetup(false); setSetupDraft({ p1: "", p2: "" }); }, style: { background: "transparent", color: "#555", padding: "10px", fontSize: 13 } }, t("settingsCancel"))),
-                showSetup && window._getFamilyMeta && (() => {
-                    const [meta2, setMeta2] = React.useState(null);
-                    React.useEffect(() => { window._getFamilyMeta().then(setMeta2); }, []);
-                    return meta2 ? (React.createElement("div", { style: { background: "rgba(232,197,71,0.07)", border: "1px solid rgba(232,197,71,0.2)", borderRadius: 12, padding: "14px 16px", marginTop: 4 } },
-                        React.createElement("div", { style: { fontSize: 9, color: "#666", fontWeight: 700, letterSpacing: 1, marginBottom: 6 } }, "CODICE FAMIGLIA"),
-                        React.createElement("div", { style: { fontSize: 26, fontWeight: 700, color: "#e8c547", letterSpacing: 6, textAlign: "center", marginBottom: 6 } }, meta2.code),
-                        React.createElement("div", { style: { fontSize: 11, color: "#555", textAlign: "center" } }, "Condividi questo codice con il tuo partner per fargli accedere agli stessi dati"))) : null;
-                })(),
-                showSetup && window._logout && (React.createElement("button", { onClick: () => { if (window._logout)
-                        window._logout(); }, style: { background: "rgba(192,57,43,0.1)", color: "#e74c3c", borderRadius: 12, padding: "12px", fontSize: 13, fontWeight: 600, border: "1px solid rgba(192,57,43,0.3)", marginTop: 4 } }, "\uD83D\uDEAA Esci dall'account")))));
+                React.createElement(FamilyCodeModal, null),
+                window._logout && (React.createElement("button", { onClick: () => window._logout(), style: { background: "rgba(192,57,43,0.1)", color: "#e74c3c", borderRadius: 12, padding: "12px", fontSize: 13, fontWeight: 600, border: "1px solid rgba(192,57,43,0.3)", marginTop: 8, width: "100%", fontFamily: "inherit", cursor: "pointer" } }, "\uD83D\uDEAA Esci dall'account")))));
     return (React.createElement("div", { style: { minHeight: "100vh", background: "#0d0d0f", fontFamily: "'DM Sans','Segoe UI',sans-serif", color: "#f0ede8", display: "flex", flexDirection: "column" } },
         React.createElement("div", { className: "mp-sidebar", style: { display: "none", position: "fixed", top: 0, left: 0, width: 220, height: "100vh", background: "#0a0a0c", borderRight: "1px solid #1a1a22", flexDirection: "column", padding: "28px 0", zIndex: 40 } },
             React.createElement("div", { style: { padding: "0 24px 28px" } },
