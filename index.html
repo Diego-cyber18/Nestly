@@ -110,6 +110,8 @@
 
 
 
+
+
 function useIsMobile() {
     const [m, setM] = (0, React.useState)(typeof window !== 'undefined' ? window.innerWidth < 768 : true);
     (0, React.useEffect)(() => {
@@ -146,7 +148,7 @@ const TRANSLATIONS = {
         // Main tabs
         tabEntrate: "Entrate", tabBudget: "Budget", tabSpese: "Spese", tabCasa: "Casa",
         // Sub tabs
-        subPlan: "Plan", subDaily: "Daily", subOverview: "Overview",
+        subPlan: "Plan", subDaily: "Daily", subOverview: "Grafici",
         subUscite: "Uscite", subStorico: "Storico",
         subBollette: "Bollette", subGrafici: "Grafici", subPellet: "Pellet",
         // Settings
@@ -206,7 +208,7 @@ const TRANSLATIONS = {
         bought: "🛒 Comprati", consumed: "🔥 Consumati", add: "Aggiungi",
         daysRemain: "giorni", finishOn: "finiscono il", noTracking: "Aggiungi la prima riga per iniziare il tracking",
         // Overview
-        overviewTitle: "Overview", monthlyPlan: "Piano Mensile", familyMonthly: "Totale Famiglia — Ultimi mesi",
+        overviewTitle: "Grafici", monthlyPlan: "Piano Mensile", familyMonthly: "Totale Famiglia — Ultimi mesi",
         essential: "Essential", extra: "Extra", saving: "Saving",
         // Categories
         catSpesa: "Spesa", catMangiare: "Mangiare Fuori", catProgrammati: "Programmati",
@@ -222,7 +224,7 @@ const TRANSLATIONS = {
         days: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
         appSubtitle: "Family Budget",
         tabEntrate: "Income", tabBudget: "Budget", tabSpese: "Expenses", tabCasa: "Home",
-        subPlan: "Plan", subDaily: "Daily", subOverview: "Overview",
+        subPlan: "Plan", subDaily: "Daily", subOverview: "Grafici",
         subUscite: "Expenses", subStorico: "History",
         subBollette: "Bills", subGrafici: "Charts", subPellet: "Pellet",
         settingsTitle: "Settings", settingsPerson1: "Person 1", settingsPerson2: "Person 2",
@@ -271,7 +273,7 @@ const TRANSLATIONS = {
         totalBought: "Total bought", addRow: "➕ New row", editRow: "✏️ Edit row",
         bought: "🛒 Bought", consumed: "🔥 Consumed", add: "Add",
         daysRemain: "days", finishOn: "run out on", noTracking: "Add first row to start tracking",
-        overviewTitle: "Overview", monthlyPlan: "Monthly Plan", familyMonthly: "Family Total — Last months",
+        overviewTitle: "Grafici", monthlyPlan: "Monthly Plan", familyMonthly: "Family Total — Last months",
         essential: "Essential", extra: "Extra", saving: "Saving",
         catSpesa: "Groceries", catMangiare: "Eating Out", catProgrammati: "Scheduled",
         catShopping: "Shopping", catVarie: "Misc", catDivertimento: "Entertainment",
@@ -285,7 +287,7 @@ const TRANSLATIONS = {
         days: ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"],
         appSubtitle: "Presupuesto Familiar",
         tabEntrate: "Ingresos", tabBudget: "Presupuesto", tabSpese: "Gastos", tabCasa: "Casa",
-        subPlan: "Plan", subDaily: "Diario", subOverview: "Resumen",
+        subPlan: "Plan", subDaily: "Diario", subOverview: "Grafici",
         subUscite: "Gastos", subStorico: "Historial",
         subBollette: "Facturas", subGrafici: "Gráficos", subPellet: "Pellet",
         settingsTitle: "Ajustes", settingsPerson1: "Persona 1", settingsPerson2: "Persona 2",
@@ -334,7 +336,7 @@ const TRANSLATIONS = {
         totalBought: "Total comprado", addRow: "➕ Nueva fila", editRow: "✏️ Editar fila",
         bought: "🛒 Comprados", consumed: "🔥 Consumidos", add: "Añadir",
         daysRemain: "días", finishOn: "se acaban el", noTracking: "Añade la primera fila para empezar",
-        overviewTitle: "Resumen", monthlyPlan: "Plan Mensual", familyMonthly: "Total Familiar — Últimos meses",
+        overviewTitle: "Grafici", monthlyPlan: "Plan Mensual", familyMonthly: "Total Familiar — Últimos meses",
         essential: "Esencial", extra: "Extra", saving: "Ahorro",
         catSpesa: "Compras", catMangiare: "Comer Fuera", catProgrammati: "Programados",
         catShopping: "Compras", catVarie: "Varios", catDivertimento: "Entretenimiento",
@@ -348,7 +350,7 @@ const TRANSLATIONS = {
         days: ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"],
         appSubtitle: "Familienbudget",
         tabEntrate: "Einnahmen", tabBudget: "Budget", tabSpese: "Ausgaben", tabCasa: "Haus",
-        subPlan: "Plan", subDaily: "Täglich", subOverview: "Übersicht",
+        subPlan: "Plan", subDaily: "Täglich", subOverview: "Grafici",
         subUscite: "Ausgaben", subStorico: "Verlauf",
         subBollette: "Rechnungen", subGrafici: "Diagramme", subPellet: "Pellet",
         settingsTitle: "Einstellungen", settingsPerson1: "Person 1", settingsPerson2: "Person 2",
@@ -397,7 +399,7 @@ const TRANSLATIONS = {
         totalBought: "Gesamt gekauft", addRow: "➕ Neue Zeile", editRow: "✏️ Zeile bearbeiten",
         bought: "🛒 Gekauft", consumed: "🔥 Verbraucht", add: "Hinzufügen",
         daysRemain: "Tage", finishOn: "gehen aus am", noTracking: "Erste Zeile hinzufügen um zu starten",
-        overviewTitle: "Übersicht", monthlyPlan: "Monatsplan", familyMonthly: "Familie Gesamt — Letzte Monate",
+        overviewTitle: "Grafici", monthlyPlan: "Monatsplan", familyMonthly: "Familie Gesamt — Letzte Monate",
         essential: "Wesentlich", extra: "Extra", saving: "Ersparnisse",
         catSpesa: "Einkauf", catMangiare: "Essen gehen", catProgrammati: "Geplant",
         catShopping: "Shopping", catVarie: "Sonstiges", catDivertimento: "Unterhaltung",
@@ -411,7 +413,7 @@ const TRANSLATIONS = {
         days: ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"],
         appSubtitle: "Budget Familial",
         tabEntrate: "Revenus", tabBudget: "Budget", tabSpese: "Dépenses", tabCasa: "Maison",
-        subPlan: "Plan", subDaily: "Quotidien", subOverview: "Aperçu",
+        subPlan: "Plan", subDaily: "Quotidien", subOverview: "Grafici",
         subUscite: "Dépenses", subStorico: "Historique",
         subBollette: "Factures", subGrafici: "Graphiques", subPellet: "Pellet",
         settingsTitle: "Paramètres", settingsPerson1: "Personne 1", settingsPerson2: "Personne 2",
@@ -460,7 +462,7 @@ const TRANSLATIONS = {
         totalBought: "Total acheté", addRow: "➕ Nouvelle ligne", editRow: "✏️ Modifier ligne",
         bought: "🛒 Achetés", consumed: "🔥 Consommés", add: "Ajouter",
         daysRemain: "jours", finishOn: "se terminent le", noTracking: "Ajoutez la première ligne pour commencer",
-        overviewTitle: "Aperçu", monthlyPlan: "Plan Mensuel", familyMonthly: "Total Famille — Derniers mois",
+        overviewTitle: "Grafici", monthlyPlan: "Plan Mensuel", familyMonthly: "Total Famille — Derniers mois",
         essential: "Essentiel", extra: "Extra", saving: "Épargne",
         catSpesa: "Courses", catMangiare: "Resto", catProgrammati: "Programmés",
         catShopping: "Shopping", catVarie: "Divers", catDivertimento: "Loisirs",
@@ -1450,7 +1452,7 @@ function App() {
                 };
                 return (React.createElement("div", null,
                     React.createElement("div", { style: { fontSize: 10, color: "#555", letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 20 } }, t("overviewTitle")),
-                    React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 24 } }, [[`diego`, N1, `#4a9eff`], [`carmen`, N2, `#ff6b9d`]].map(([p, label, color]) => (React.createElement("div", { key: p, style: { background: `${color}0d`, border: `1px solid ${color}22`, borderRadius: 14, padding: 16 } },
+                    React.createElement("div", { style: { display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "1fr 1fr", gap: isMobile ? 10 : 24, marginBottom: 24 } }, [[`diego`, N1, `#4a9eff`], [`carmen`, N2, `#ff6b9d`]].map(([p, label, color]) => (React.createElement("div", { key: p, style: { background: `${color}0d`, border: `1px solid ${color}22`, borderRadius: 14, padding: 16 } },
                         React.createElement("div", { style: { fontSize: 11, color, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 } }, label),
                         React.createElement("div", { style: { fontFamily: "'DM Serif Display',serif", fontSize: 20, color: "#f0ede8", marginBottom: 12 } }, fmt(currentStats[p].total)),
                         ["essential", "extra", "saving"].map(cat => (React.createElement("div", { key: cat, style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 } },
@@ -1469,24 +1471,24 @@ function App() {
                                 "%") : null;
                         })))))),
                     chartData.length > 0 && (React.createElement(React.Fragment, null,
-                        React.createElement("div", { style: { display: isMobile ? "block" : "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 14 } },
+                        React.createElement("div", { style: { display: isMobile ? "block" : "grid", gridTemplateColumns: "1fr 1fr", gap: isMobile ? 0 : 24, marginBottom: 14 } },
                             React.createElement("div", { style: { background: "#141418", border: "1px solid #1f1f28", borderRadius: 14, padding: "16px 8px 8px 8px" } },
                                 React.createElement("div", { style: { fontSize: 11, color: "#4a9eff", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 14, paddingLeft: 8 } }, `📊 ${N1} — ${t("monthlyPlanLabel")}`),
-                                React.createElement(SimpleBarChart, { data: chartData, height: isMobile ? 200 : 260, bars: [
+                                React.createElement(SimpleBarChart, { data: chartData, height: isMobile ? 200 : 320, bars: [
                                         { dataKey: "d_essential", name: t("essential"), fill: CAT_COLORS.essential },
                                         { dataKey: "d_extra", name: t("extra"), fill: CAT_COLORS.extra },
                                         { dataKey: "d_saving", name: t("saving"), fill: CAT_COLORS.saving }
                                     ] })),
                             React.createElement("div", { style: { background: "#141418", border: "1px solid #1f1f28", borderRadius: 14, padding: "16px 8px 8px 8px" } },
                                 React.createElement("div", { style: { fontSize: 11, color: "#ff6b9d", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 14, paddingLeft: 8 } }, `📊 ${N2} — ${t("monthlyPlanLabel")}`),
-                                React.createElement(SimpleBarChart, { data: chartData, height: isMobile ? 200 : 260, bars: [
+                                React.createElement(SimpleBarChart, { data: chartData, height: isMobile ? 200 : 320, bars: [
                                         { dataKey: "c_essential", name: t("essential"), fill: CAT_COLORS.essential },
                                         { dataKey: "c_extra", name: t("extra"), fill: CAT_COLORS.extra },
                                         { dataKey: "c_saving", name: t("saving"), fill: CAT_COLORS.saving }
                                     ] }))),
                         React.createElement("div", { style: { background: "#141418", border: "1px solid #1f1f28", borderRadius: 14, padding: "16px 8px 8px 8px" } },
                             React.createElement("div", { style: { fontSize: 11, color: "#e8c547", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 14, paddingLeft: 8 } }, `📊 ${t("familyMonthlyLabel")}`),
-                            React.createElement(SimpleBarChart, { data: chartData.map(d => (Object.assign(Object.assign({}, d), { diego_tot: d.d_essential + d.d_extra + d.d_saving, carmen_tot: d.c_essential + d.c_extra + d.c_saving }))), height: isMobile ? 200 : 280, bars: [
+                            React.createElement(SimpleBarChart, { data: chartData.map(d => (Object.assign(Object.assign({}, d), { diego_tot: d.d_essential + d.d_extra + d.d_saving, carmen_tot: d.c_essential + d.c_extra + d.c_saving }))), height: isMobile ? 200 : 340, bars: [
                                     { dataKey: "diego_tot", name: N1, fill: "#4a9eff" },
                                     { dataKey: "carmen_tot", name: N2, fill: "#ff6b9d" }
                                 ] })))),
