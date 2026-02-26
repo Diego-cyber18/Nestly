@@ -120,6 +120,8 @@
 
 
 
+
+
 function useIsMobile() {
     const [m, setM] = (0, React.useState)(typeof window !== 'undefined' ? window.innerWidth < 768 : true);
     (0, React.useEffect)(() => {
@@ -743,13 +745,39 @@ function App() {
     const N1 = names.p1 || "Persona 1";
     const N2 = names.p2 || "Persona 2";
     const hasNames = names.p1 && names.p2;
-    const current = history[key] || { diego: "", carmen: "" };
-    const diegoVal = parseFloat(current.diego) || 0;
-    const carmenVal = parseFloat(current.carmen) || 0;
+    const current = history[key] || { diego: [], carmen: [] };
+    // Support old format (string) and new format (array)
+    const normalizeEntries = (val) => {
+        if (!val)
+            return [];
+        if (typeof val === "string" || typeof val === "number") {
+            const n = parseFloat(val);
+            return n > 0 ? [{ id: "default", label: "Stipendio", amount: n }] : [];
+        }
+        return Array.isArray(val) ? val : [];
+    };
+    const diegoEntries = normalizeEntries(current.diego);
+    const carmenEntries = normalizeEntries(current.carmen);
+    const diegoVal = diegoEntries.reduce((a, e) => a + (parseFloat(e.amount) || 0), 0);
+    const carmenVal = carmenEntries.reduce((a, e) => a + (parseFloat(e.amount) || 0), 0);
     const total = diegoVal + carmenVal;
     const diegoPct = total > 0 ? (diegoVal / total) * 100 : 50;
     const carmenPct = total > 0 ? (carmenVal / total) * 100 : 50;
     const updateSalary = (person, value) => saveHistory(Object.assign(Object.assign({}, history), { [key]: Object.assign(Object.assign({}, current), { [person]: value }) }));
+    const updateIncome = (person, entries) => saveHistory(Object.assign(Object.assign({}, history), { [key]: Object.assign(Object.assign({}, current), { [person]: entries }) }));
+    const addIncomeEntry = (person) => {
+        const entries = person === "diego" ? [...diegoEntries] : [...carmenEntries];
+        entries.push({ id: Date.now().toString(), label: "", amount: "" });
+        updateIncome(person, entries);
+    };
+    const updateIncomeEntry = (person, id, field, value) => {
+        const entries = (person === "diego" ? diegoEntries : carmenEntries).map(e => e.id === id ? Object.assign(Object.assign({}, e), { [field]: value }) : e);
+        updateIncome(person, entries);
+    };
+    const removeIncomeEntry = (person, id) => {
+        const entries = (person === "diego" ? diegoEntries : carmenEntries).filter(e => e.id !== id);
+        updateIncome(person, entries);
+    };
     const currentPlan = plan[key] || {};
     const updateAutoItem = (itemId, value) => savePlan(Object.assign(Object.assign({}, plan), { [key]: Object.assign(Object.assign({}, currentPlan), { [itemId]: value }) }));
     const updateManualItem = (itemId, person, value) => {
@@ -1023,49 +1051,92 @@ function App() {
                 tab === "spese" && (React.createElement("div", { style: { display: "flex", gap: 6, padding: "10px 0 12px" } }, [["uscite", "subUscite"]].map(([s, k]) => (React.createElement("button", { key: s, onClick: () => setSubTab(s), style: { flex: 1, padding: "9px 0", borderRadius: 12, border: "none", fontFamily: "inherit", fontSize: 13, fontWeight: 600, cursor: "pointer", background: subTab === s ? "#e8c547" : "#1a1a22", color: subTab === s ? "#0d0d0f" : "#555", transition: "all 0.15s" } }, t(k)))))),
                 tab === "casa" && (React.createElement("div", { style: { display: "flex", gap: 6, padding: "10px 0 12px" } }, [["bollette", "subBollette"], ["pellet", "subPellet"], ["grafici", "subGrafici"]].map(([s, k]) => (React.createElement("button", { key: s, onClick: () => setSubTab(s), style: { flex: 1, padding: "9px 0", borderRadius: 12, border: "none", fontFamily: "inherit", fontSize: 13, fontWeight: 600, cursor: "pointer", background: subTab === s ? "#e8c547" : "#1a1a22", color: subTab === s ? "#0d0d0f" : "#555", transition: "all 0.15s" } }, t(k)))))))),
         React.createElement("div", { style: { maxWidth: isMobile ? 680 : "none", margin: "0 auto", padding: isMobile ? "20px 16px 90px" : "24px 0 40px" } },
-            (tab === "entrate" && subTab !== "storico") && (React.createElement("div", null,
-                React.createElement("div", { style: { fontSize: 10, color: "#555", letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 16 } },
-                    MONTHS[month],
-                    " ",
-                    year),
-                React.createElement("div", { style: { display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 12, marginBottom: 20 } }, [
-                    { k: "diego", label: N1, color: "#4a9eff", bg: "rgba(74,158,255,0.07)", border: "rgba(74,158,255,0.2)" },
-                    { k: "carmen", label: N2, color: "#ff6b9d", bg: "rgba(255,107,157,0.07)", border: "rgba(255,107,157,0.2)" }
-                ].map(({ k, label, color, bg, border }) => {
-                    const val = k === "diego" ? diegoVal : carmenVal;
-                    const p = k === "diego" ? diegoPct : carmenPct;
-                    return (React.createElement("div", { key: k, style: { background: bg, border: `1px solid ${border}`, borderRadius: 14, padding: 18 } },
-                        React.createElement("div", { style: { fontSize: 11, color, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 10 } }, label),
-                        React.createElement("div", { style: { position: "relative" } },
-                            React.createElement("span", { style: { position: "absolute", left: 13, top: "50%", transform: "translateY(-50%)", color: "#555", fontSize: 14 } }, "\u20AC"),
-                            React.createElement("input", { type: "number", placeholder: "0,00", value: current[k] || "", onChange: e => updateSalary(k, e.target.value), style: { paddingLeft: 30 } })),
-                        val > 0 && (React.createElement("div", { style: { marginTop: 10, display: "flex", justifyContent: "space-between", alignItems: "center" } },
-                            React.createElement("span", { style: { fontSize: 12, color: "#555" } }, t("contribution")),
-                            React.createElement("span", { style: { fontSize: 24, fontFamily: "'DM Serif Display',serif", color } }, pct(p))))));
-                })),
-                total > 0 && (React.createElement("div", { style: { background: "#141418", border: "1px solid #222", borderRadius: 14, padding: 18 } },
-                    React.createElement("div", { style: { display: "flex", justifyContent: "space-between", marginBottom: 12 } },
-                        React.createElement("span", { style: { fontSize: 12, color: "#555" } }, t("familyTotal")),
-                        React.createElement("span", { style: { fontSize: 22, fontFamily: "'DM Serif Display',serif", color: "#e8c547" } }, fmt(total))),
-                    React.createElement("div", { style: { height: 8, borderRadius: 4, overflow: "hidden", display: "flex", marginBottom: 8 } },
-                        React.createElement("div", { style: { width: `${diegoPct}%`, background: "#4a9eff", transition: "width 0.6s ease" } }),
-                        React.createElement("div", { style: { width: `${carmenPct}%`, background: "#ff6b9d", transition: "width 0.6s ease" } })),
-                    React.createElement("div", { style: { display: "flex", justifyContent: "space-between" } },
-                        React.createElement("span", { style: { fontSize: 12, color: "#4a9eff" } },
-                            "\u25CF ",
-                            N1,
-                            " ",
-                            fmt(diegoVal),
-                            " (",
-                            diegoPct.toFixed(1),
-                            "%)"),
-                        React.createElement("span", { style: { fontSize: 12, color: "#ff6b9d" } },
-                            N2,
-                            " ",
-                            fmt(carmenVal),
-                            " (",
-                            carmenPct.toFixed(1),
-                            "%) \u25CF")))))),
+            (tab === "entrate" && subTab !== "storico") && (() => {
+                const prevMonthE = month === 0 ? 11 : month - 1;
+                const prevYearE = month === 0 ? year - 1 : year;
+                const prevKeyE = `${prevYearE}-${String(prevMonthE + 1).padStart(2, "0")}`;
+                const prevHistE = history[prevKeyE];
+                const currentEmptyE = diegoEntries.length === 0 && carmenEntries.length === 0;
+                const hasPrevE = prevHistE && (normalizeEntries(prevHistE.diego).length > 0 || normalizeEntries(prevHistE.carmen).length > 0);
+                return (React.createElement("div", null,
+                    React.createElement("div", { style: { fontSize: 10, color: "#555", letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 16 } },
+                        MONTHS[month],
+                        " ",
+                        year),
+                    hasPrevE && (React.createElement("button", { onClick: () => {
+                            updateIncome("diego", normalizeEntries(prevHistE.diego));
+                            updateIncome("carmen", normalizeEntries(prevHistE.carmen));
+                            // Save both together
+                            saveHistory(Object.assign(Object.assign({}, history), { [key]: {
+                                    diego: normalizeEntries(prevHistE.diego),
+                                    carmen: normalizeEntries(prevHistE.carmen)
+                                } }));
+                        }, style: {
+                            width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                            background: currentEmptyE ? "rgba(232,197,71,0.10)" : "rgba(255,255,255,0.03)",
+                            border: `1px dashed ${currentEmptyE ? "rgba(232,197,71,0.4)" : "#2a2a35"}`,
+                            borderRadius: 10, padding: "11px 16px", marginBottom: 16,
+                            color: currentEmptyE ? "#e8c547" : "#555", fontSize: 13, fontWeight: currentEmptyE ? 600 : 500,
+                            cursor: "pointer"
+                        } },
+                        React.createElement("span", { style: { fontSize: 15 } }, "\u2398"),
+                        "Copia Entrate da ",
+                        MONTHS[prevMonthE],
+                        " ",
+                        prevYearE,
+                        !currentEmptyE && React.createElement("span", { style: { fontSize: 10, color: "#3a3a44" } }, "(sovrascrive)"))),
+                    React.createElement("div", { style: { display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 12, marginBottom: 20 } }, [
+                        { k: "diego", label: N1, color: "#4a9eff", bg: "rgba(74,158,255,0.07)", border: "rgba(74,158,255,0.2)", entries: diegoEntries },
+                        { k: "carmen", label: N2, color: "#ff6b9d", bg: "rgba(255,107,157,0.07)", border: "rgba(255,107,157,0.2)", entries: carmenEntries }
+                    ].map(({ k, label, color, bg, border, entries }) => {
+                        const val = k === "diego" ? diegoVal : carmenVal;
+                        const p = k === "diego" ? diegoPct : carmenPct;
+                        return (React.createElement("div", { key: k, style: { background: bg, border: `1px solid ${border}`, borderRadius: 14, padding: 18 } },
+                            React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 } },
+                                React.createElement("div", { style: { fontSize: 11, color, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase" } }, label),
+                                val > 0 && React.createElement("div", { style: { fontFamily: "'DM Serif Display',serif", fontSize: 20, color } }, fmt(val))),
+                            React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } }, (entries.length === 0 ? [{ id: "new_default", label: "", amount: "" }] : entries).map((entry, ei) => (React.createElement("div", { key: entry.id, style: { display: "flex", gap: 6, alignItems: "center" } },
+                                React.createElement("input", { type: "text", placeholder: "es. Stipendio", value: entry.label, onChange: e => updateIncomeEntry(k, entry.id, "label", e.target.value), style: { flex: 1, padding: "8px 10px", fontSize: 12, background: "rgba(0,0,0,0.25)", borderColor: `${color}33` } }),
+                                React.createElement("div", { style: { position: "relative", flex: "0 0 110px" } },
+                                    React.createElement("span", { style: { position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#555", fontSize: 13 } }, "\u20AC"),
+                                    React.createElement("input", { type: "number", placeholder: "0,00", value: entry.amount, onChange: e => updateIncomeEntry(k, entry.id, "amount", e.target.value), style: { paddingLeft: 24, padding: "8px 10px 8px 24px", fontSize: 13, background: "rgba(0,0,0,0.25)", borderColor: `${color}33` } })),
+                                entries.length > 1 && (React.createElement("button", { onClick: () => removeIncomeEntry(k, entry.id), style: { color: "#3a3a44", fontSize: 18, padding: "0 2px", flexShrink: 0 } }, "\u00D7")))))),
+                            React.createElement("button", { onClick: () => addIncomeEntry(k), style: {
+                                    width: "100%", marginTop: 10, padding: "7px", borderRadius: 8,
+                                    border: `1px dashed ${color}33`, color: `${color}99`, fontSize: 12,
+                                    background: "transparent", cursor: "pointer"
+                                } }, "+ Aggiungi voce"),
+                            val > 0 && entries.length > 1 && (React.createElement("div", { style: { marginTop: 10, display: "flex", justifyContent: "space-between", alignItems: "center" } },
+                                React.createElement("span", { style: { fontSize: 11, color: "#555" } }, "Totale"),
+                                React.createElement("span", { style: { fontSize: 18, fontFamily: "'DM Serif Display',serif", color } }, fmt(val)))),
+                            val > 0 && (React.createElement("div", { style: { marginTop: 8, display: "flex", justifyContent: "space-between", alignItems: "center" } },
+                                React.createElement("span", { style: { fontSize: 11, color: "#555" } }, t("contribution")),
+                                React.createElement("span", { style: { fontSize: 16, fontFamily: "'DM Serif Display',serif", color } }, pct(p))))));
+                    })),
+                    total > 0 && (React.createElement("div", { style: { background: "#141418", border: "1px solid #222", borderRadius: 14, padding: 18 } },
+                        React.createElement("div", { style: { display: "flex", justifyContent: "space-between", marginBottom: 12 } },
+                            React.createElement("span", { style: { fontSize: 12, color: "#555" } }, t("familyTotal")),
+                            React.createElement("span", { style: { fontSize: 22, fontFamily: "'DM Serif Display',serif", color: "#e8c547" } }, fmt(total))),
+                        React.createElement("div", { style: { height: 8, borderRadius: 4, overflow: "hidden", display: "flex", marginBottom: 8 } },
+                            React.createElement("div", { style: { width: `${diegoPct}%`, background: "#4a9eff", transition: "width 0.6s ease" } }),
+                            React.createElement("div", { style: { width: `${carmenPct}%`, background: "#ff6b9d", transition: "width 0.6s ease" } })),
+                        React.createElement("div", { style: { display: "flex", justifyContent: "space-between" } },
+                            React.createElement("span", { style: { fontSize: 12, color: "#4a9eff" } },
+                                "\u25CF ",
+                                N1,
+                                " ",
+                                fmt(diegoVal),
+                                " (",
+                                diegoPct.toFixed(1),
+                                "%)"),
+                            React.createElement("span", { style: { fontSize: 12, color: "#ff6b9d" } },
+                                N2,
+                                " ",
+                                fmt(carmenVal),
+                                " (",
+                                carmenPct.toFixed(1),
+                                "%) \u25CF"))))));
+            })(),
             (tab === "budget" && subTab === "plan") && (React.createElement("div", null,
                 total === 0 && (React.createElement("div", { style: { background: "rgba(232,197,71,0.07)", border: "1px solid rgba(232,197,71,0.2)", borderRadius: 10, padding: "10px 14px", fontSize: 12, color: "#e8c547", marginBottom: 16 } }, "\u26A0\uFE0F Inserisci gli stipendi in Entrate per il calcolo automatico")),
                 (() => {
