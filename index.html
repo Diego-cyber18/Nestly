@@ -126,6 +126,8 @@
 
 
 
+
+
 function useIsMobile() {
     const [m, setM] = (0, React.useState)(typeof window !== 'undefined' ? window.innerWidth < 768 : true);
     (0, React.useEffect)(() => {
@@ -135,24 +137,36 @@ function useIsMobile() {
     }, []);
     return m;
 }
-function SimpleBarChart({ data, bars, height = 180 }) {
+function SimpleBarChart({ data, bars, height = 180, showValues = false }) {
+    const [tooltip, setTooltip] = React.useState(null);
     if (!data || data.length === 0)
         return null;
     const maxVal = Math.max(1, ...data.flatMap(d => bars.map(b => Math.abs(d[b.dataKey] || 0))));
     const fmt2 = v => v >= 1000 ? (v / 1000).toFixed(1) + 'k' : String(Math.round(v));
-    return (React.createElement("div", { style: { width: '100%' } },
-        React.createElement("div", { style: { display: 'flex', alignItems: 'flex-end', gap: 3, height: height, paddingLeft: 32, position: 'relative' } },
-            React.createElement("div", { style: { position: 'absolute', left: 0, top: 0, bottom: 20, width: 30, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'flex-end', paddingRight: 4 } }, [maxVal, maxVal / 2, 0].map((v, i) => React.createElement("span", { key: i, style: { fontSize: 9, color: '#555' } }, fmt2(v)))),
-            data.map((d, di) => (React.createElement("div", { key: di, style: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' } },
-                React.createElement("div", { style: { width: '100%', display: 'flex', gap: 1, alignItems: 'flex-end', height: height - 22 } }, bars.map((b, bi) => {
+    const fmtFull = v => new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(v || 0);
+    const gridLines = [maxVal, maxVal * 0.75, maxVal * 0.5, maxVal * 0.25, 0];
+    return (React.createElement("div", { style: { width: '100%', position: 'relative' } },
+        tooltip && (React.createElement("div", { style: { position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', background: '#1a1a26', border: '1px solid #2a2a38', borderRadius: 8, padding: '8px 14px', zIndex: 10, pointerEvents: 'none', whiteSpace: 'nowrap' } },
+            React.createElement("div", { style: { fontSize: 11, color: '#e8c547', fontWeight: 700, marginBottom: 4 } }, tooltip.name),
+            tooltip.items.map((item, i) => (React.createElement("div", { key: i, style: { fontSize: 11, color: item.color, marginBottom: 2 } },
+                item.label,
+                ": ",
+                fmtFull(item.val)))))),
+        React.createElement("div", { style: { display: 'flex', alignItems: 'flex-end', gap: 4, height: height, paddingLeft: 38, position: 'relative' } },
+            gridLines.slice(0, -1).map((v, i) => (React.createElement("div", { key: i, style: { position: 'absolute', left: 38, right: 0, bottom: 22 + ((v / maxVal) * (height - 22)), borderTop: '1px dashed #1e1e28', pointerEvents: 'none' } },
+                React.createElement("span", { style: { position: 'absolute', left: -36, top: -8, fontSize: 9, color: '#444' } }, fmt2(v))))),
+            data.map((d, di) => (React.createElement("div", { key: di, style: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: bars.length > 1 ? bars.length * 10 + 4 : 12 }, onMouseEnter: () => setTooltip({ name: d.name, items: bars.map(b => ({ label: b.name, val: d[b.dataKey] || 0, color: b.fill })) }), onMouseLeave: () => setTooltip(null) },
+                React.createElement("div", { style: { width: '100%', display: 'flex', gap: 2, alignItems: 'flex-end', height: height - 22 } }, bars.map((b, bi) => {
                     const val = d[b.dataKey] || 0;
                     const pct = maxVal > 0 ? (Math.abs(val) / maxVal) * 100 : 0;
-                    return React.createElement("div", { key: bi, title: b.name + ': ' + val, style: { flex: 1, height: pct + '%', background: b.fill, borderRadius: '2px 2px 0 0', minHeight: val > 0 ? 2 : 0 } });
+                    return (React.createElement("div", { key: bi, style: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', height: '100%' } },
+                        showValues && val > 0 && React.createElement("div", { style: { fontSize: 8, color: b.fill, marginBottom: 2, fontWeight: 700 } }, fmt2(val)),
+                        React.createElement("div", { style: { width: '100%', height: pct + '%', background: b.fill, borderRadius: '3px 3px 0 0', minHeight: val > 0 ? 3 : 0, transition: 'opacity 0.15s', opacity: tooltip && tooltip.name !== d.name ? 0.5 : 1 } })));
                 })),
-                React.createElement("div", { style: { fontSize: 9, color: '#666', marginTop: 2, textAlign: 'center' } }, d.name))))),
-        bars.length > 1 && React.createElement("div", { style: { display: 'flex', gap: 10, justifyContent: 'center', marginTop: 6, flexWrap: 'wrap' } }, bars.map((b, i) => (React.createElement("div", { key: i, style: { display: 'flex', alignItems: 'center', gap: 4 } },
-            React.createElement("div", { style: { width: 10, height: 10, background: b.fill, borderRadius: 2 } }),
-            React.createElement("span", { style: { fontSize: 10, color: '#888' } }, b.name)))))));
+                React.createElement("div", { style: { fontSize: 9, color: '#666', marginTop: 3, textAlign: 'center', letterSpacing: 0.3 } }, d.name))))),
+        bars.length > 1 && React.createElement("div", { style: { display: 'flex', gap: 14, justifyContent: 'center', marginTop: 10, flexWrap: 'wrap' } }, bars.map((b, i) => (React.createElement("div", { key: i, style: { display: 'flex', alignItems: 'center', gap: 5 } },
+            React.createElement("div", { style: { width: 12, height: 12, background: b.fill, borderRadius: 3 } }),
+            React.createElement("span", { style: { fontSize: 11, color: '#888' } }, b.name)))))));
 }
 const TRANSLATIONS = {
     it: {
@@ -1619,27 +1633,27 @@ function App() {
                                 "%") : null;
                         })))))),
                     chartData.length > 0 && (React.createElement(React.Fragment, null,
-                        React.createElement("div", { style: { display: isMobile ? "block" : "grid", gridTemplateColumns: "1fr 1fr", gap: isMobile ? 0 : 24, marginBottom: 14 } },
-                            React.createElement("div", { style: { background: "#141418", border: "1px solid #1f1f28", borderRadius: 14, padding: "16px 8px 8px 8px" } },
-                                React.createElement("div", { style: { fontSize: 11, color: "#4a9eff", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 14, paddingLeft: 8 } }, `📊 ${N1} — ${t("monthlyPlanLabel")}`),
-                                React.createElement(SimpleBarChart, { data: chartData, height: isMobile ? 200 : 320, bars: [
+                        React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 16 } },
+                            React.createElement("div", { style: { background: "#141418", border: "1px solid #1f1f28", borderRadius: 16, padding: isMobile ? "14px 8px 8px" : "20px 24px 16px" } },
+                                React.createElement("div", { style: { fontSize: isMobile ? 11 : 13, color: "#4a9eff", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: isMobile ? 10 : 18 } }, `📊 ${N1} — ${t("monthlyPlanLabel")}`),
+                                React.createElement(SimpleBarChart, { data: chartData, height: isMobile ? 200 : 380, showValues: !isMobile, bars: [
                                         { dataKey: "d_essential", name: t("essential"), fill: CAT_COLORS.essential },
                                         { dataKey: "d_extra", name: t("extra"), fill: CAT_COLORS.extra },
                                         { dataKey: "d_saving", name: t("saving"), fill: CAT_COLORS.saving }
                                     ] })),
-                            React.createElement("div", { style: { background: "#141418", border: "1px solid #1f1f28", borderRadius: 14, padding: "16px 8px 8px 8px" } },
-                                React.createElement("div", { style: { fontSize: 11, color: "#ff6b9d", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 14, paddingLeft: 8 } }, `📊 ${N2} — ${t("monthlyPlanLabel")}`),
-                                React.createElement(SimpleBarChart, { data: chartData, height: isMobile ? 200 : 320, bars: [
+                            React.createElement("div", { style: { background: "#141418", border: "1px solid #1f1f28", borderRadius: 16, padding: isMobile ? "14px 8px 8px" : "20px 24px 16px" } },
+                                React.createElement("div", { style: { fontSize: isMobile ? 11 : 13, color: "#ff6b9d", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: isMobile ? 10 : 18 } }, `📊 ${N2} — ${t("monthlyPlanLabel")}`),
+                                React.createElement(SimpleBarChart, { data: chartData, height: isMobile ? 200 : 380, showValues: !isMobile, bars: [
                                         { dataKey: "c_essential", name: t("essential"), fill: CAT_COLORS.essential },
                                         { dataKey: "c_extra", name: t("extra"), fill: CAT_COLORS.extra },
                                         { dataKey: "c_saving", name: t("saving"), fill: CAT_COLORS.saving }
-                                    ] }))),
-                        React.createElement("div", { style: { background: "#141418", border: "1px solid #1f1f28", borderRadius: 14, padding: "16px 8px 8px 8px" } },
-                            React.createElement("div", { style: { fontSize: 11, color: "#e8c547", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 14, paddingLeft: 8 } }, `📊 ${t("familyMonthlyLabel")}`),
-                            React.createElement(SimpleBarChart, { data: chartData.map(d => (Object.assign(Object.assign({}, d), { diego_tot: d.d_essential + d.d_extra + d.d_saving, carmen_tot: d.c_essential + d.c_extra + d.c_saving }))), height: isMobile ? 200 : 340, bars: [
-                                    { dataKey: "diego_tot", name: N1, fill: "#4a9eff" },
-                                    { dataKey: "carmen_tot", name: N2, fill: "#ff6b9d" }
-                                ] })))),
+                                    ] })),
+                            React.createElement("div", { style: { background: "#141418", border: "1px solid #1f1f28", borderRadius: 16, padding: isMobile ? "14px 8px 8px" : "20px 24px 16px" } },
+                                React.createElement("div", { style: { fontSize: isMobile ? 11 : 13, color: "#e8c547", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: isMobile ? 10 : 18 } }, `📊 ${t("familyMonthlyLabel")}`),
+                                React.createElement(SimpleBarChart, { data: chartData.map(d => (Object.assign(Object.assign({}, d), { diego_tot: d.d_essential + d.d_extra + d.d_saving, carmen_tot: d.c_essential + d.c_extra + d.c_saving }))), height: isMobile ? 200 : 340, showValues: !isMobile, bars: [
+                                        { dataKey: "diego_tot", name: N1, fill: "#4a9eff" },
+                                        { dataKey: "carmen_tot", name: N2, fill: "#ff6b9d" }
+                                    ] }))))),
                     chartData.length === 0 && (React.createElement("div", { style: { textAlign: "center", color: "#333", fontSize: 13, padding: "40px 0" } }, "Inserisci i dati nel Plan per vedere i grafici"))));
             })(),
             (tab === "casa" && subTab === "bollette") && (() => {
