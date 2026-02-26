@@ -102,6 +102,8 @@
 
 
 
+
+
 function useIsMobile() {
     const [m, setM] = (0, React.useState)(typeof window !== 'undefined' ? window.innerWidth < 768 : true);
     (0, React.useEffect)(() => {
@@ -1075,7 +1077,7 @@ function App() {
                         " ",
                         prevYear));
                 })(),
-                sections.map(sectionName => {
+                React.createElement("div", { style: { display: isMobile ? "block" : "grid", gridTemplateColumns: "60% 38%", gap: 20, alignItems: "start" } }, sections.map(sectionName => {
                     const sectionGroups = structure.filter(g => g.section === sectionName);
                     if (!sectionGroups.length)
                         return null;
@@ -1138,7 +1140,7 @@ function App() {
                                     }),
                                     React.createElement("button", { onClick: () => addItem(group.id), style: { width: "100%", padding: "9px 16px", borderTop: "1px dashed #1c1c24", color: "#3a3a44", fontSize: 12, textAlign: "left" } }, "+ Aggiungi voce")))));
                         })))));
-                }),
+                })),
                 planTotals.grandTotal > 0 && (React.createElement("div", { style: { background: "#131317", border: "1px solid #222", borderRadius: 14, padding: 18 } },
                     React.createElement("div", { style: { fontSize: 10, color: "#444", letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 14 } },
                         t("planSummary"),
@@ -1461,23 +1463,24 @@ function App() {
                                 "%") : null;
                         })))))),
                     chartData.length > 0 && (React.createElement(React.Fragment, null,
-                        React.createElement("div", { style: { background: "#141418", border: "1px solid #1f1f28", borderRadius: 14, padding: "16px 8px 8px 8px", marginBottom: 14 } },
-                            React.createElement("div", { style: { fontSize: 11, color: "#4a9eff", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 14, paddingLeft: 8 } }, `📊 ${N1} — ${t("monthlyPlanLabel")}`),
-                            React.createElement(SimpleBarChart, { data: chartData, height: 200, bars: [
-                                    { dataKey: "d_essential", name: t("essential"), fill: CAT_COLORS.essential },
-                                    { dataKey: "d_extra", name: t("extra"), fill: CAT_COLORS.extra },
-                                    { dataKey: "d_saving", name: t("saving"), fill: CAT_COLORS.saving }
-                                ] })),
-                        React.createElement("div", { style: { background: "#141418", border: "1px solid #1f1f28", borderRadius: 14, padding: "16px 8px 8px 8px", marginBottom: 14 } },
-                            React.createElement("div", { style: { fontSize: 11, color: "#ff6b9d", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 14, paddingLeft: 8 } }, `📊 ${N2} — ${t("monthlyPlanLabel")}`),
-                            React.createElement(SimpleBarChart, { data: chartData, height: 200, bars: [
-                                    { dataKey: "c_essential", name: t("essential"), fill: CAT_COLORS.essential },
-                                    { dataKey: "c_extra", name: t("extra"), fill: CAT_COLORS.extra },
-                                    { dataKey: "c_saving", name: t("saving"), fill: CAT_COLORS.saving }
-                                ] })),
+                        React.createElement("div", { style: { display: isMobile ? "block" : "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 14 } },
+                            React.createElement("div", { style: { background: "#141418", border: "1px solid #1f1f28", borderRadius: 14, padding: "16px 8px 8px 8px" } },
+                                React.createElement("div", { style: { fontSize: 11, color: "#4a9eff", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 14, paddingLeft: 8 } }, `📊 ${N1} — ${t("monthlyPlanLabel")}`),
+                                React.createElement(SimpleBarChart, { data: chartData, height: isMobile ? 200 : 260, bars: [
+                                        { dataKey: "d_essential", name: t("essential"), fill: CAT_COLORS.essential },
+                                        { dataKey: "d_extra", name: t("extra"), fill: CAT_COLORS.extra },
+                                        { dataKey: "d_saving", name: t("saving"), fill: CAT_COLORS.saving }
+                                    ] })),
+                            React.createElement("div", { style: { background: "#141418", border: "1px solid #1f1f28", borderRadius: 14, padding: "16px 8px 8px 8px" } },
+                                React.createElement("div", { style: { fontSize: 11, color: "#ff6b9d", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 14, paddingLeft: 8 } }, `📊 ${N2} — ${t("monthlyPlanLabel")}`),
+                                React.createElement(SimpleBarChart, { data: chartData, height: isMobile ? 200 : 260, bars: [
+                                        { dataKey: "c_essential", name: t("essential"), fill: CAT_COLORS.essential },
+                                        { dataKey: "c_extra", name: t("extra"), fill: CAT_COLORS.extra },
+                                        { dataKey: "c_saving", name: t("saving"), fill: CAT_COLORS.saving }
+                                    ] }))),
                         React.createElement("div", { style: { background: "#141418", border: "1px solid #1f1f28", borderRadius: 14, padding: "16px 8px 8px 8px" } },
                             React.createElement("div", { style: { fontSize: 11, color: "#e8c547", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 14, paddingLeft: 8 } }, `📊 ${t("familyMonthlyLabel")}`),
-                            React.createElement(SimpleBarChart, { data: chartData.map(d => (Object.assign(Object.assign({}, d), { diego_tot: d.d_essential + d.d_extra + d.d_saving, carmen_tot: d.c_essential + d.c_extra + d.c_saving }))), height: 200, bars: [
+                            React.createElement(SimpleBarChart, { data: chartData.map(d => (Object.assign(Object.assign({}, d), { diego_tot: d.d_essential + d.d_extra + d.d_saving, carmen_tot: d.c_essential + d.c_extra + d.c_saving }))), height: isMobile ? 200 : 280, bars: [
                                     { dataKey: "diego_tot", name: N1, fill: "#4a9eff" },
                                     { dataKey: "carmen_tot", name: N2, fill: "#ff6b9d" }
                                 ] })))),
