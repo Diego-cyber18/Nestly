@@ -3,113 +3,95 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Budget" />
-  <meta name="theme-color" content="#0d0d0f" />
-  <title>Budget Familiare</title>
-  <link rel="apple-touch-icon" href="icon.png" />
+  <title>MoneyPal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
   <style>
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body { background:#0d0d0f; -webkit-tap-highlight-color:transparent; overscroll-behavior:none; }
-    #root { min-height:100vh; }
-    #loading-screen { position:fixed;inset:0;background:#0d0d0f;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;z-index:999; }
-    .spinner { width:32px;height:32px;border:3px solid #333;border-top-color:#e8c547;border-radius:50%;animation:spin 0.8s linear infinite; }
-    @keyframes spin { to { transform:rotate(360deg); } }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #0d0d0f; color: #f0ede8; font-family: 'DM Sans', sans-serif; }
+    #root { min-height: 100vh; }
+    #loading { display:flex; align-items:center; justify-content:center; height:100vh; background:#0d0d0f; color:#e8c547; font-family:'DM Serif Display',serif; font-size:24px; }
   </style>
-</head>
-<body>
-  <div id="loading-screen">
-    <div class="spinner"></div>
-    <div id="loading-msg" style="color:#555;font-size:13px;font-family:sans-serif">Caricamento...</div>
-  </div>
-  <div id="root"></div>
-
-  <script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <!-- React -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <!-- Recharts -->
+  <script src="https://cdn.jsdelivr.net/npm/recharts@2.12.0/umd/Recharts.js"></script>
+</head>
+<body>
+  <div id="loading">MoneyPal</div>
+  <div id="root"></div>
 
   <script>
-  window.addEventListener('load', function() {
-    try {
-      if (!window.React || !window.ReactDOM) {
-        throw new Error('React non caricato');
-      }
+    // Firebase init + localStorage proxy
+    firebase.initializeApp({
+      apiKey: "AIzaSyBDTMPfdMxsvstKYpvQh_95URYfN5JdzEE",
+      authDomain: "moneypal-89fcf.firebaseapp.com",
+      databaseURL: "https://moneypal-89fcf-default-rtdb.europe-west1.firebasedatabase.app",
+      storageBucket: "moneypal-89fcf.firebasestorage.app",
+      appId: "1:290834672771:web:0e92b118cefea511a1bfb6"
+    });
 
-      const { useState, useEffect } = React;
+    const db = firebase.database();
+    const FB_PATH = "budget/family";
+    let localCache = {};
 
-      // ── FIREBASE SYNC ──
-      firebase.initializeApp({
-        apiKey: "AIzaSyBDTMPfdMxsvstKYpvQh_95URYfN5JdzEE",
-        authDomain: "moneypal-89fcf.firebaseapp.com",
-        databaseURL: "https://moneypal-89fcf-default-rtdb.europe-west1.firebasedatabase.app",
-        projectId: "moneypal-89fcf",
-        storageBucket: "moneypal-89fcf.firebasestorage.app",
-        messagingSenderId: "290834672771",
-        appId: "1:290834672771:web:0e92b118cefea511a1bfb6"
-      });
-
-      const _db = firebase.database();
-      const _ref = _db.ref('budget/family');
-      const _cache = {};
-
-      // Override localStorage con Firebase
-      try {
-        Object.defineProperty(window, 'localStorage', {
-          value: {
-            getItem:    (k) => k in _cache ? _cache[k] : null,
-            setItem:    (k, v) => { _cache[k] = v; _ref.update({[k]: v}).catch(console.error); },
-            removeItem: (k) => { delete _cache[k]; _ref.child(k).remove().catch(()=>{}); },
-            clear: () => {},
-            key: (i) => Object.keys(_cache)[i] || null,
-            get length() { return Object.keys(_cache).length; }
-          },
-          writable: false, configurable: true
-        });
-      } catch(lsErr) {
-        // Fallback: patch methods directly
-        console.warn('defineProperty failed, patching directly:', lsErr);
-        const orig = window.localStorage;
-        orig._getItem = orig.getItem.bind(orig);
-        orig.getItem = (k) => k in _cache ? _cache[k] : null;
-        orig.setItem = (k, v) => { _cache[k] = v; _ref.update({[k]: v}).catch(console.error); };
-        orig.removeItem = (k) => { delete _cache[k]; _ref.child(k).remove().catch(()=>{}); };
-      }
-
-      // Real-time sync banner
-      let _firstLoad = true;
-      _ref.on('value', snap => {
-        const remote = snap.val() || {};
-        if (_firstLoad) { Object.assign(_cache, remote); return; }
-        const changed = Object.keys(remote).some(k => remote[k] !== _cache[k]);
-        if (changed) {
-          Object.assign(_cache, remote);
-          if (!document.getElementById('sync-banner')) {
-            const b = document.createElement('div');
-            b.id = 'sync-banner';
-            b.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#e8c547;color:#0d0d0f;padding:10px 22px;border-radius:20px;font-weight:700;font-size:13px;cursor:pointer;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,0.5);white-space:nowrap';
-            b.textContent = '🔄 Dati aggiornati — tocca per ricaricare';
-            b.onclick = () => location.reload();
-            document.body.appendChild(b);
-            setTimeout(() => b.remove(), 8000);
-          }
+    // Override window.storage to use Firebase
+    window.storage = {
+      get: async (key) => {
+        try {
+          const snap = await db.ref(FB_PATH + "/" + key.replace(/[.#$[\]]/g,"_")).get();
+          if (snap.exists()) return { value: snap.val() };
+          // fallback to localStorage
+          const v = localStorage.getItem(key);
+          return v ? { value: v } : null;
+        } catch(e) {
+          const v = localStorage.getItem(key);
+          return v ? { value: v } : null;
         }
-      });
+      },
+      set: async (key, value) => {
+        try {
+          localStorage.setItem(key, value);
+          await db.ref(FB_PATH + "/" + key.replace(/[.#$[\]]/g,"_")).set(value);
+          return { key, value };
+        } catch(e) {
+          localStorage.setItem(key, value);
+          return { key, value };
+        }
+      },
+      delete: async (key) => {
+        try {
+          localStorage.removeItem(key);
+          await db.ref(FB_PATH + "/" + key.replace(/[.#$[\]]/g,"_")).remove();
+          return { key, deleted: true };
+        } catch(e) {
+          localStorage.removeItem(key);
+          return { key, deleted: true };
+        }
+      }
+    };
 
-      // Carica dati da Firebase, poi avvia app
-      document.getElementById('loading-msg').textContent = 'Connessione...';
-      _ref.once('value')
-        .then(snap => {
-          const d = snap.val();
-          if (d) Object.assign(_cache, d);
-          document.getElementById('loading-msg').textContent = 'Avvio...';
-        })
-        .catch(e => { console.warn('Firebase error:', e); })
-        .finally(() => {
-          _firstLoad = false;
-          document.getElementById('loading-screen').style.display = 'none';
+    // Recharts bridge
+    const Recharts = window.Recharts || {};
+    const { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, Cell, LineChart, Line } = Recharts;
+  </script>
 
+  <script>
+
+
+function useIsMobile() {
+    const [m, setM] = (0, React.useState)(typeof window !== 'undefined' ? window.innerWidth < 768 : true);
+    (0, React.useEffect)(() => {
+        const fn = () => setM(window.innerWidth < 768);
+        window.addEventListener('resize', fn);
+        return () => window.removeEventListener('resize', fn);
+    }, []);
+    return m;
+}
 function SimpleBarChart({ data, bars, height = 180 }) {
     if (!data || data.length === 0)
         return null;
@@ -560,6 +542,7 @@ const today = () => {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 };
 function App() {
+    const isMobile = useIsMobile();
     const [tab, setTab] = (0, React.useState)("entrate");
     const [subTab, setSubTab] = (0, React.useState)("plan");
     const [lang, setLang] = (0, React.useState)("it");
@@ -884,7 +867,25 @@ function App() {
                         setShowSetup(false);
                     }, style: { background: "#e8c547", color: "#0d0d0f", borderRadius: 12, padding: "14px", fontSize: 15, fontWeight: 700, marginTop: 8 } }, showSetup ? t("settingsSave") : t("settingsStart")),
                 showSetup && (React.createElement("button", { onClick: () => { setShowSetup(false); setSetupDraft({ p1: "", p2: "" }); }, style: { background: "transparent", color: "#555", padding: "10px", fontSize: 13 } }, t("settingsCancel"))))));
-    return (React.createElement("div", { style: { minHeight: "100vh", background: "#0d0d0f", fontFamily: "'DM Sans','Segoe UI',sans-serif", color: "#f0ede8" } },
+    return (React.createElement("div", { style: { minHeight: "100vh", background: "#0d0d0f", fontFamily: "'DM Sans','Segoe UI',sans-serif", color: "#f0ede8", display: "flex", flexDirection: "column" } },
+        React.createElement("div", { className: "mp-sidebar", style: { display: "none", position: "fixed", top: 0, left: 0, width: 220, height: "100vh", background: "#0a0a0c", borderRight: "1px solid #1a1a22", flexDirection: "column", padding: "28px 0", zIndex: 40 } },
+            React.createElement("div", { style: { padding: "0 24px 28px" } },
+                React.createElement("div", { style: { fontFamily: "'DM Serif Display',serif", fontSize: 26, color: "#e8c547" } }, "MoneyPal"),
+                React.createElement("div", { style: { fontSize: 11, color: "#444", marginTop: 4 } },
+                    N1,
+                    " & ",
+                    N2)),
+            React.createElement("div", { style: { flex: 1, display: "flex", flexDirection: "column", gap: 2, padding: "0 12px", overflowY: "auto" } }, [["entrate", "💰", "tabEntrate"], ["budget", "📋", "tabBudget"], ["spese", "💸", "tabSpese"], ["casa", "🏠", "tabCasa"]].map(([t_, icon, tkey]) => (React.createElement("button", { key: t_, onClick: () => { setTab(t_); setSubTab(t_ === "entrate" ? "entrate_main" : t_ === "budget" ? "plan" : t_ === "spese" ? "uscite" : "bollette"); }, style: { display: "flex", alignItems: "center", gap: 12, padding: "11px 14px", borderRadius: 12, border: "none", background: tab === t_ ? "rgba(232,197,71,0.12)" : "none", color: tab === t_ ? "#e8c547" : "#555", fontFamily: "inherit", fontSize: 14, fontWeight: tab === t_ ? 600 : 400, cursor: "pointer", textAlign: "left", width: "100%", transition: "all 0.15s" } },
+                React.createElement("span", { style: { fontSize: 18 } }, icon),
+                React.createElement("span", null, t(tkey)),
+                tab === t_ && React.createElement("div", { style: { marginLeft: "auto", width: 5, height: 5, borderRadius: "50%", background: "#e8c547" } }))))),
+            React.createElement("div", { style: { padding: "8px 12px 0", borderTop: "1px solid #1a1a22" } },
+                React.createElement("button", { onClick: () => { setSetupDraft({ p1: names.p1, p2: names.p2 }); setShowSetup(true); }, style: { display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 12, border: "none", background: "none", color: "#444", fontFamily: "inherit", fontSize: 13, cursor: "pointer", width: "100%" } },
+                    React.createElement("span", null, "\u2699\uFE0F"),
+                    React.createElement("span", null, "Impostazioni")),
+                React.createElement("button", { onClick: () => setShowExportImport(true), style: { display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 12, border: "none", background: "none", color: "#444", fontFamily: "inherit", fontSize: 13, cursor: "pointer", width: "100%" } },
+                    React.createElement("span", null, "\uD83D\uDCBE"),
+                    React.createElement("span", null, "Esporta / Importa")))),
         showExportImport && (React.createElement("div", { style: { position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 } },
             React.createElement("div", { style: { background: "#141418", border: "1px solid #2a2a35", borderRadius: 18, padding: 24, width: "100%", maxWidth: 480 } },
                 React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 } },
@@ -923,6 +924,15 @@ function App() {
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display&display=swap');
         * { box-sizing:border-box; margin:0; padding:0; }
         ::-webkit-scrollbar { width:4px; } ::-webkit-scrollbar-track { background:#1a1a1f; } ::-webkit-scrollbar-thumb { background:#333; border-radius:2px; }
+        /* Desktop sidebar layout */
+        @media (min-width: 768px) {
+          .mp-sidebar { display: flex !important; }
+          .mp-header { padding-left: 252px !important; }
+          .mp-content { margin-left: 220px !important; }
+        }
+        @media (max-width: 767px) {
+          .mp-sidebar { display: none !important; }
+        }
         input[type=number],input[type=text],input[type=date],textarea { background:#181820; border:1px solid #252530; color:#f0ede8; border-radius:8px; padding:10px 14px; font-size:14px; width:100%; outline:none; font-family:inherit; transition:border-color 0.2s; -moz-appearance:textfield; }
         input[type=number]::-webkit-inner-spin-button { -webkit-appearance:none; }
         input[type=date]::-webkit-calendar-picker-indicator { filter:invert(0.4); }
@@ -932,30 +942,24 @@ function App() {
         button { cursor:pointer; border:none; font-family:inherit; background:none; }
         .tag { display:inline-flex; align-items:center; font-size:10px; font-weight:700; padding:2px 9px; border-radius:20px; letter-spacing:0.8px; text-transform:uppercase; color:#fff; white-space:nowrap; }
       `),
-        React.createElement("div", { style: { padding: "16px 16px 0", borderBottom: "1px solid #1a1a22", position: "sticky", top: 0, background: "#0d0d0f", zIndex: 20, paddingTop: "env(safe-area-inset-top, 16px)" } },
+        React.createElement("div", { style: { className: "mp-header", padding: isMobile ? "16px 16px 0" : "16px 32px 0", borderBottom: "1px solid #1a1a22", position: "sticky", top: 0, background: "#0d0d0f", zIndex: 20, paddingTop: "env(safe-area-inset-top, 16px)" } },
             React.createElement("div", { style: { maxWidth: 680, margin: "0 auto" } },
                 React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 } },
-                    React.createElement("div", null,
-                        React.createElement("div", { style: { fontFamily: "'DM Serif Display',serif", fontSize: 19, color: "#e8c547" } }, t("appSubtitle")),
-                        React.createElement("div", { style: { fontSize: 10, color: "#444", letterSpacing: 1.2, textTransform: "uppercase" } },
-                            N1,
-                            " & ",
-                            N2)),
+                    React.createElement("div", null, isMobile && React.createElement("div", { style: { fontFamily: "'DM Serif Display',serif", fontSize: 24, color: "#e8c547" } }, "MoneyPal")),
                     React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8 } },
-                        React.createElement("button", { onClick: () => { setSetupDraft({ p1: names.p1, p2: names.p2 }); setShowSetup(true); }, style: { background: "none", color: "#444", fontSize: 18, padding: "4px 6px", borderRadius: 8 } }, "\u2699\uFE0F"),
-                        React.createElement("button", { onClick: () => setShowExportImport(true), style: { background: "none", color: "#444", fontSize: 18, padding: "4px 6px", borderRadius: 8 } }, "\uD83D\uDCBE"),
+                        isMobile && React.createElement(React.Fragment, null,
+                            React.createElement("button", { onClick: () => { setSetupDraft({ p1: names.p1, p2: names.p2 }); setShowSetup(true); }, style: { background: "none", color: "#444", fontSize: 18, padding: "4px 6px", borderRadius: 8 } }, "\u2699\uFE0F"),
+                            React.createElement("button", { onClick: () => setShowExportImport(true), style: { background: "none", color: "#444", fontSize: 18, padding: "4px 6px", borderRadius: 8 } }, "\uD83D\uDCBE")),
                         React.createElement("div", { style: { display: "flex", gap: 6 } },
                             React.createElement("select", { value: month, onChange: e => setMonth(parseInt(e.target.value)), style: { padding: "6px 10px", fontSize: 12, width: "auto" } }, MONTHS.map((m, i) => React.createElement("option", { key: i, value: i }, m))),
                             React.createElement("select", { value: year, onChange: e => setYear(parseInt(e.target.value)), style: { padding: "6px 10px", fontSize: 12, width: 76 } }, YEARS.map(y => React.createElement("option", { key: y, value: y }, y)))))),
-                React.createElement("div", { style: { display: "flex", borderBottom: "1px solid #1a1a22" } }, [["entrate", "💰", "tabEntrate"], ["budget", "📋", "tabBudget"], ["spese", "💸", "tabSpese"], ["casa", "🏠", "tabCasa"]].map(([t_, icon, tkey]) => (React.createElement("button", { key: t_, onClick: () => setTab(t_), style: { flex: 1, padding: "9px 0", fontSize: 11, fontWeight: tab === t_ ? 700 : 400, color: tab === t_ ? "#e8c547" : "#555", borderBottom: tab === t_ ? "2px solid #e8c547" : "2px solid transparent", transition: "all 0.2s" } },
-                    icon,
-                    React.createElement("br", null),
-                    React.createElement("span", { style: { fontSize: 10 } }, t(tkey)))))),
-                tab === "budget" && (React.createElement("div", { style: { display: "flex", background: "#0a0a0d", borderBottom: "1px solid #111" } }, [["plan", "subPlan"], ["daily", "subDaily"], ["overview", "subOverview"]].map(([s, k]) => (React.createElement("button", { key: s, onClick: () => setSubTab(s), style: { flex: 1, padding: "7px 0", fontSize: 11, color: subTab === s ? "#e8c547" : "#444", borderBottom: subTab === s ? "2px solid #e8c54766" : "2px solid transparent" } }, t(k)))))),
-                tab === "spese" && (React.createElement("div", { style: { display: "flex", background: "#0a0a0d", borderBottom: "1px solid #111" } }, [["uscite", "subUscite"], ["storico", "subStorico"]].map(([s, k]) => (React.createElement("button", { key: s, onClick: () => setSubTab(s), style: { flex: 1, padding: "7px 0", fontSize: 11, color: subTab === s ? "#e8c547" : "#444", borderBottom: subTab === s ? "2px solid #e8c54766" : "2px solid transparent" } }, t(k)))))),
-                tab === "casa" && (React.createElement("div", { style: { display: "flex", background: "#0a0a0d", borderBottom: "1px solid #111" } }, [["bollette", "subBollette"], ["grafici", "subGrafici"], ["pellet", "subPellet"]].map(([s, k]) => (React.createElement("button", { key: s, onClick: () => setSubTab(s), style: { flex: 1, padding: "7px 0", fontSize: 11, color: subTab === s ? "#e8c547" : "#444", borderBottom: subTab === s ? "2px solid #e8c54766" : "2px solid transparent" } }, t(k)))))))),
+                React.createElement("div", { style: { height: 1, background: "#1a1a22" } }),
+                tab === "entrate" && (React.createElement("div", { style: { display: "flex", gap: 6, padding: "10px 0 12px" } }, [["entrate_main", "tabEntrate"], ["storico", "subStorico"]].map(([s, k]) => (React.createElement("button", { key: s, onClick: () => setSubTab(s), style: { flex: 1, padding: "9px 0", borderRadius: 12, border: "none", fontFamily: "inherit", fontSize: 13, fontWeight: 600, cursor: "pointer", background: subTab === s ? "#e8c547" : "#1a1a22", color: subTab === s ? "#0d0d0f" : "#555", transition: "all 0.15s" } }, t(k)))))),
+                tab === "budget" && (React.createElement("div", { style: { display: "flex", gap: 6, padding: "10px 0 12px" } }, [["plan", "subPlan"], ["daily", "subDaily"], ["overview", "subOverview"]].map(([s, k]) => (React.createElement("button", { key: s, onClick: () => setSubTab(s), style: { flex: 1, padding: "9px 0", borderRadius: 12, border: "none", fontFamily: "inherit", fontSize: 13, fontWeight: 600, cursor: "pointer", background: subTab === s ? "#e8c547" : "#1a1a22", color: subTab === s ? "#0d0d0f" : "#555", transition: "all 0.15s" } }, t(k)))))),
+                tab === "spese" && (React.createElement("div", { style: { display: "flex", gap: 6, padding: "10px 0 12px" } }, [["uscite", "subUscite"]].map(([s, k]) => (React.createElement("button", { key: s, onClick: () => setSubTab(s), style: { flex: 1, padding: "9px 0", borderRadius: 12, border: "none", fontFamily: "inherit", fontSize: 13, fontWeight: 600, cursor: "pointer", background: subTab === s ? "#e8c547" : "#1a1a22", color: subTab === s ? "#0d0d0f" : "#555", transition: "all 0.15s" } }, t(k)))))),
+                tab === "casa" && (React.createElement("div", { style: { display: "flex", gap: 6, padding: "10px 0 12px" } }, [["bollette", "subBollette"], ["pellet", "subPellet"], ["grafici", "subGrafici"]].map(([s, k]) => (React.createElement("button", { key: s, onClick: () => setSubTab(s), style: { flex: 1, padding: "9px 0", borderRadius: 12, border: "none", fontFamily: "inherit", fontSize: 13, fontWeight: 600, cursor: "pointer", background: subTab === s ? "#e8c547" : "#1a1a22", color: subTab === s ? "#0d0d0f" : "#555", transition: "all 0.15s" } }, t(k)))))))),
         React.createElement("div", { style: { maxWidth: 680, margin: "0 auto", padding: "20px 16px 70px" } },
-            tab === "entrate" && (React.createElement("div", null,
+            (tab === "entrate" && subTab !== "storico") && (React.createElement("div", null,
                 React.createElement("div", { style: { fontSize: 10, color: "#555", letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 16 } },
                     MONTHS[month],
                     " ",
@@ -1060,7 +1064,7 @@ function App() {
                     const sectionTotal = sectionGroups.reduce((acc, g) => acc + getGroupTotal(g), 0);
                     const isSecCollapsed = collapsed[`sec_${sectionName}`];
                     return (React.createElement("div", { key: sectionName, style: { marginBottom: 18 } },
-                        React.createElement("button", { onClick: () => toggleCollapse(`sec_${sectionName}`), style: { width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", background: `${sectionInfo.color}18`, border: `1.5px solid ${sectionInfo.color}44`, borderRadius: isSecCollapsed ? 12 : "12px 12px 0 0", padding: "11px 16px" } },
+                        React.createElement("button", { onClick: () => toggleCollapse(`sec_${sectionName}`), style: { width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", background: `${sectionInfo.color}18`, border: `1.5px solid ${sectionInfo.color}44`, borderRadius: isSecCollapsed ? 12 : "12px 12px 0 0", padding: "11px 16px", position: "sticky", top: isMobile ? 110 : 106, zIndex: 10, backdropFilter: "blur(12px)" } },
                             React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8 } },
                                 React.createElement("div", { style: { width: 4, height: 20, borderRadius: 2, background: sectionInfo.color } }),
                                 React.createElement("span", { style: { fontFamily: "'DM Serif Display',serif", fontSize: 16, color: sectionInfo.color } }, t(sectionInfo.tKey)),
@@ -1777,7 +1781,7 @@ function App() {
                             }))))),
                     rows.length === 0 && (React.createElement("div", { style: { textAlign: "center", color: "#333", fontSize: 13, padding: "40px 0" } }, "Aggiungi la prima riga per iniziare il tracking"))));
             })(),
-            (tab === "spese" && subTab === "storico") && (React.createElement("div", null,
+            (tab === "entrate" && subTab === "storico") && (React.createElement("div", null,
                 React.createElement("div", { style: { fontSize: 10, color: "#555", letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 18 } }, t("storicoTitle")),
                 historyEntries.length === 0 ? (React.createElement("div", { style: { textAlign: "center", color: "#333", fontSize: 13, padding: "40px 0" } }, t("noData"))) : (React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 10 } }, historyEntries.map(e => (React.createElement("div", { key: e.key, style: { background: "#141418", borderRadius: 12, padding: 16 } },
                     React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 10 } },
@@ -1803,29 +1807,18 @@ function App() {
                             fmt(e.carmen),
                             " (",
                             e.cPct.toFixed(1),
-                            "%)"))))))))))));
+                            "%)")))))))))),
+        isMobile && (React.createElement("div", { style: { position: "fixed", bottom: 0, left: 0, right: 0, background: "rgba(13,13,15,0.97)", backdropFilter: "blur(20px)", borderTop: "1px solid #1a1a22", display: "flex", paddingBottom: 20, zIndex: 50 } }, [["entrate", "💰", "tabEntrate"], ["budget", "📋", "tabBudget"], ["spese", "💸", "tabSpese"], ["casa", "🏠", "tabCasa"]].map(([t_, icon, tkey]) => (React.createElement("button", { key: t_, onClick: () => { setTab(t_); setSubTab(t_ === "entrate" ? "entrate_main" : t_ === "budget" ? "plan" : t_ === "spese" ? "uscite" : "bollette"); }, style: { flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "12px 0 4px", border: "none", background: "none", cursor: "pointer", gap: 3, fontFamily: "inherit" } },
+            React.createElement("div", { style: { fontSize: 22, lineHeight: 1, filter: tab === t_ ? "none" : "grayscale(1) opacity(0.35)", transition: "all 0.2s" } }, icon),
+            React.createElement("div", { style: { fontSize: 10, fontWeight: tab === t_ ? 700 : 400, color: tab === t_ ? "#e8c547" : "#555", letterSpacing: 0.5, textTransform: "uppercase", transition: "all 0.2s" } }, t(tkey)),
+            tab === t_ && React.createElement("div", { style: { width: 4, height: 4, borderRadius: "50%", background: "#e8c547" } }))))))));
 }
-// Mount the app
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(React.createElement(App));
-document.getElementById('loading').style.display = 'none';
 
 
-          try {
-            const domRoot = ReactDOM.createRoot(document.getElementById('root'));
-            domRoot.render(React.createElement(App));
-          } catch(renderErr) {
-            console.error('Render error:', renderErr);
-            document.getElementById('root').innerHTML = '<div style="color:#e74c3c;padding:40px;text-align:center;font-family:sans-serif">Errore: ' + renderErr.message + '</div>';
-            document.getElementById('loading-screen').style.display = 'none';
-          }
-        });
-
-    } catch(err) {
-      console.error('Init error:', err);
-      document.getElementById('loading-screen').innerHTML = '<div style="color:#e74c3c;padding:40px;text-align:center;font-family:sans-serif">Errore: ' + err.message + '<br><br><button onclick="location.reload()" style="background:#e8c547;color:#000;border:none;padding:10px 20px;border-radius:8px;cursor:pointer">Ricarica</button></div>';
-    }
-  });
+    // Mount
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(React.createElement(App));
+    document.getElementById('loading').style.display = 'none';
   </script>
 </body>
 </html>
