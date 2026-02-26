@@ -104,6 +104,8 @@
 
 
 
+
+
 function useIsMobile() {
     const [m, setM] = (0, React.useState)(typeof window !== 'undefined' ? window.innerWidth < 768 : true);
     (0, React.useEffect)(() => {
@@ -1077,7 +1079,7 @@ function App() {
                         " ",
                         prevYear));
                 })(),
-                React.createElement("div", { style: { display: isMobile ? "block" : "grid", gridTemplateColumns: "60% 38%", gap: 20, alignItems: "start" } }, sections.map(sectionName => {
+                React.createElement("div", { style: { display: isMobile ? "block" : "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,400px)", gap: 20, alignItems: "start", paddingRight: isMobile ? 0 : 4 } }, sections.map(sectionName => {
                     const sectionGroups = structure.filter(g => g.section === sectionName);
                     if (!sectionGroups.length)
                         return null;
@@ -1085,7 +1087,7 @@ function App() {
                     const sectionTotal = sectionGroups.reduce((acc, g) => acc + getGroupTotal(g), 0);
                     const isSecCollapsed = collapsed[`sec_${sectionName}`];
                     return (React.createElement("div", { key: sectionName, style: { marginBottom: 18 } },
-                        React.createElement("button", { onClick: () => toggleCollapse(`sec_${sectionName}`), style: { width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", background: `${sectionInfo.color}18`, border: `1.5px solid ${sectionInfo.color}44`, borderRadius: isSecCollapsed ? 12 : "12px 12px 0 0", padding: "11px 16px", position: "sticky", top: isMobile ? 110 : 106, zIndex: 10, backdropFilter: "blur(12px)" } },
+                        React.createElement("button", { onClick: () => toggleCollapse(`sec_${sectionName}`), style: { width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", background: `${sectionInfo.color}18`, border: `1.5px solid ${sectionInfo.color}44`, borderRadius: isSecCollapsed ? 12 : "12px 12px 0 0", padding: "11px 16px", position: isMobile ? "sticky" : "static", top: 110, zIndex: isMobile ? 10 : "auto", backdropFilter: isMobile ? "blur(12px)" : "none" } },
                             React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8 } },
                                 React.createElement("div", { style: { width: 4, height: 20, borderRadius: 2, background: sectionInfo.color } }),
                                 React.createElement("span", { style: { fontFamily: "'DM Serif Display',serif", fontSize: 16, color: sectionInfo.color } }, t(sectionInfo.tKey)),
